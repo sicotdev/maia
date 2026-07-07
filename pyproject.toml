@@ -1,0 +1,19 @@
+[project]
+name = "maia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "python-dotenv>=1.2.2",
+    "ruff>=0.15.20",
+]
+
+[project.scripts]
+maia = "maia.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
