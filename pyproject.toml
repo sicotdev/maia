@@ -5,14 +5,17 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "fastapi>=0.139.0",
+    "jinja2>=3.1.6",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
     "ruff>=0.15.20",
+    "uvicorn>=0.50.2",
 ]
 
 [project.scripts]
-maia = "maia.main:main"
+maia = "maia.app:main"
 
 [build-system]
 requires = ["hatchling"]

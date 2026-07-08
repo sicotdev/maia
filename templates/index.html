@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="content">
+    <h1>Welcome to Maia</h1>
+    <p>This is the home page of your new project.</p>
+    <button hx-post="/hello" hx-target="#content" hx-swap="innerHTML">
+        Click for a message
+    </button>
+</div>
+{% endblock %}
