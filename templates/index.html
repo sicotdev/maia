@@ -1,11 +1,37 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maia - Chat</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <div id="chat-container">
+        <div class="message ai-message">Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</div>
+        <!-- Messages will appear here -->
+        <div id="chat-history" hx-swap-oob="true"></div>
+    </div>
 
-{% block content %}
-<div id="content">
-    <h1>Welcome to Maia</h1>
-    <p>This is the home page of your new project.</p>
-    <button hx-post="/hello" hx-target="#content" hx-swap="innerHTML">
-        Click for a message
-    </button>
-</div>
-{% endblock %}
+    <form id="chat-form" 
+          hx-post="/chat" 
+          hx-target="#chat-history" 
+          hx-swap="beforeend" 
+          hx-trigger="submit"
+          hx-on-submit="document.getElementById('user-input').value = '';"
+          hx-indicator="#loading-spinner">
+        <div class="input-area">
+            <input type="text" name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off">
+            <button type="button" id="stt-btn" class="stt-btn" title="Dictée vocale">🎤</button>
+            <button type="submit">Envoyer</button>
+        </div>
+        <!-- Spinner moved inside the form so that the .htmx-request class applies correctly -->
+        <div id="loading-spinner" class="htmx-indicator" style="padding: 5px 10px; font-size: 0.8em;">
+            Chargement...
+        </div>
+    </form>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
