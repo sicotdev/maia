@@ -32,7 +32,10 @@ def test_chat_success(mock_post):
 
     response = client.post("/chat", data={"message": "Hello"})
     assert response.status_code == 200
-    assert "Hello! I am the Maia AI." in response.text
+    payload = response.json()
+    assert payload["role"] == "assistant"
+    assert payload["content"] == "Hello! I am the Maia AI."
+    assert payload["error"] is False
 
 @patch("maia.chat.router.httpx2.AsyncClient.post")
 def test_chat_error(mock_post):
@@ -53,4 +56,7 @@ def test_chat_error(mock_post):
 
     response = client.post("/chat", data={"message": "Hello"})
     assert response.status_code == 200
-    assert "Error: 500" in response.text
+    payload = response.json()
+    assert payload["role"] == "assistant"
+    assert payload["error"] is True
+    assert "Une erreur est survenue" in payload["content"]

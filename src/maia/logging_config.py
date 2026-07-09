@@ -1,5 +1,4 @@
-import os
-import logging
+import os, logging
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -12,6 +11,8 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(SRC_DIR))
 LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 # Ensure the log directory exists
 os.makedirs(LOG_DIR, exist_ok=True)
+
+print(f"Logging directory: {LOG_DIR}")  # Debugging line
 
 # Get log path from environment variable or use default
 LOG_FILE = os.getenv("LOG_FILE", os.path.join(LOG_DIR, "error.log"))

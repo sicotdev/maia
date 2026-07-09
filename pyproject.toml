@@ -13,6 +13,7 @@ dependencies = [
     "ruff>=0.15.20",
     "uvicorn>=0.50.2",
     "httpx2",
+    "python-multipart>=0.0.32",
 ]
 
 [project.scripts]

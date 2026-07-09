@@ -1,59 +1,73 @@
-import httpx2
-from fastapi import APIRouter, Request, HTTPException
 import os
+import httpx2
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from maia.logging_config import logger
-
 
 router = APIRouter()
 
 GATEWAY_URL = os.getenv("HERMES_GATEWAY_URL")
 GATEWAY_APIKEY = os.getenv("HERMES_GATEWAY_APIKEY")
 
+
 @router.post("/chat")
 async def chat(request: Request):
-    # Get message from request body (HTMX/Form data)
     data = await request.form()
     user_message = data.get("message")
-    
+
     if not user_message:
         raise HTTPException(status_code=400, detail="No message provided")
 
-    # Call Hermes Gateway
-    # We'll assume a standard OpenAI-compatible structure for the gateway
     headers = {
         "Authorization": f"Bearer {GATEWAY_APIKEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
-    
+
     payload = {
-        "model": "hermes-llm", # Default or configurable
-        "messages": [
-            {"role": "user", "content": user_message}
-        ]
+        "model": "hermes-llm",
+        "messages": [{"role": "user", "content": user_message}],
     }
 
     async with httpx2.AsyncClient(timeout=None) as client:
         error_message = "Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée."
+
         try:
             response = await client.post(
                 f"{GATEWAY_URL}/v1/chat/completions",
                 json=payload,
-                headers=headers
+                headers=headers,
             )
             response.raise_for_status()
             result = response.json()
-            
-            # Extract the AI response text
+
             ai_response = result["choices"][0]["message"]["content"]
-            
-            # Return a simple HTML snippet for HTMX to inject
-            # We wrap it in a div with the correct class
-            return f'<div class="message ai-message">{ai_response}</div>'
-            
+
+            return JSONResponse(
+                {
+                    "role": "assistant",
+                    "content": ai_response,
+                    "error": False,
+                }
+            )
+
         except httpx2.HTTPStatusError as e:
-            logger.error(f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}", exc_info=True)
-            logger.info("Attempting to write to log file...")
-            return f'<div class="message ai-message">{error_message}</div>'
+            logger.error(
+                f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}",
+                exc_info=True,
+            )
+            return JSONResponse(
+                {
+                    "role": "assistant",
+                    "content": error_message,
+                    "error": True,
+                }
+            )
         except Exception as e:
             logger.error(f"Unexpected error in chat router: {str(e)}", exc_info=True)
-            return f'<div class="message ai-message">{error_message}</div>'
+            return JSONResponse(
+                {
+                    "role": "assistant",
+                    "content": error_message,
+                    "error": True,
+                }
+            )

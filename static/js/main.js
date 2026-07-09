@@ -1,3 +1,26 @@
+
+function handleChatBeforeRequest(event) {
+    const container = document.getElementById('chat-container');
+    const userBubble = document.createElement('div');
+    userBubble.className = 'message user-message';
+    userBubble.textContent = document.getElementById('user-input').value;
+    container.appendChild(userBubble);
+
+    document.getElementById('user-input').value = '';
+}
+
+function handleChatAfterRequest(event) {
+    const container = document.getElementById('chat-container');
+    const data = JSON.parse(event.detail.xhr.responseText);
+    console.log('Response data:', data);  // Log the response data for debugging
+    
+    const chat_line = document.createElement('div');
+    chat_line.innerHTML = marked.parse(data.content);
+    chat_line.className = 'message ' + (data.error ? 'error-message' : 'ai-message');
+
+    container.appendChild(chat_line);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const sttBtn = document.getElementById('stt-btn');
     let recognition;
@@ -27,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sttBtn.classList.remove('active');
         };
     } else {
-        sttBtn.style.display = 'none';
+        sttBtn.disabled = true;
     }
 
     if (sttBtn) {

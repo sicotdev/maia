@@ -3,28 +3,31 @@
 {% block content %}
     <div id="chat-container">
         <div class="message ai-message">Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</div>
+        
         <!-- Messages will appear here -->
-        <div id="chat-history" hx-swap-oob="true"></div>
+
+    </div>
+     
+    <!-- Spinner -->
+    <div id="loading-spinner" class="htmx-indicator" style="padding: 5px 10px; font-size: 0.8em;">
+        Chargement...
     </div>
 
     <form id="chat-form" 
           hx-post="/chat" 
-          hx-target="#chat-history" 
-          hx-swap="beforeend" 
+          hx-swap="none"
           hx-trigger="submit"
-          hx-on-submit="document.getElementById('user-input').value = '';"
-          hx-indicator="#loading-spinner">
+          hx-indicator="#loading-spinner"
+          hx-on::before-request="handleChatBeforeRequest(event)"
+          hx-on::after-request="handleChatAfterRequest(event)">
         <div class="input-area">
             <input type="text" name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off">
             <button type="button" id="stt-btn" class="stt-btn" title="Dictée vocale">🎤</button>
             <button type="submit">Envoyer</button>
         </div>
-        <!-- Spinner moved inside the form so that the .htmx-request class applies correctly -->
-        <div id="loading-spinner" class="htmx-indicator" style="padding: 5px 10px; font-size: 0.8em;">
-            Chargement...
-        </div>
     </form>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/main.js"></script>
 
 {% endblock %}
