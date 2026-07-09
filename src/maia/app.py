@@ -7,14 +7,6 @@ import uvicorn
 import os
 import argparse
 
-# Import the logging config first
-from maia.logging_config import setup_logging
-setup_logging()
-
-# Now import the chat router and logger
-from maia.chat.router import router as chat_router
-from maia.logging_config import logger
-
 # Load environment variables
 load_dotenv()
 
@@ -29,8 +21,10 @@ if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
+from maia.chat.router import router as chat_router
 app.include_router(chat_router)
 
+# Serve index.html at the root path
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")

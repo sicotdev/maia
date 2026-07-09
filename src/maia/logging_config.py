@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Determine the project root directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(BASE_DIR))
+SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(SRC_DIR))
 
 LOG_DIR = os.path.join(PROJECT_ROOT, "logs")
 # Ensure the log directory exists

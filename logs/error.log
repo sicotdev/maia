@@ -1,11 +1,62 @@
-INFO:     Will watch for changes in these directories: ['/home/thal/workspace/maia']
-INFO:     Uvicorn running on http://0.0.0.0:8645 (Press CTRL+C to quit)
-INFO:     Started reloader process [8984] using StatReload
-INFO:     Started server process [8995]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     127.0.0.1:59514 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:43646 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52602 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52602 - "GET /static/css/style.css HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:60190 - "POST /hello HTTP/1.1" 200 OK
+2026-07-08 18:15:49,745 - maia - ERROR - Unexpected error in chat router: All connection attempts failed
+Traceback (most recent call last):
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_transports/default.py", line 98, in map_httpcore_exceptions
+    yield
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_transports/default.py", line 388, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_async/connection_pool.py", line 242, in handle_async_request
+    raise exc from None
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_async/connection_pool.py", line 224, in handle_async_request
+    response = await connection.handle_async_request(pool_request.request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_async/connection.py", line 94, in handle_async_request
+    raise exc
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_async/connection.py", line 74, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_async/connection.py", line 117, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_backends/auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_backends/anyio.py", line 115, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/home/thal/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpcore2/_exceptions.py", line 17, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore2.ConnectError: All connection attempts failed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/thal/workspace/maia/src/maia/chat/router.py", line 38, in chat
+    response = await client.post(
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1891, in post
+    return await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1667, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1695, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1730, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_client.py", line 1764, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_transports/default.py", line 387, in handle_async_request
+    with map_httpcore_exceptions():
+  File "/home/thal/.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/thal/workspace/maia/.venv/lib/python3.11/site-packages/httpx2/_transports/default.py", line 115, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx2.ConnectError: All connection attempts failed

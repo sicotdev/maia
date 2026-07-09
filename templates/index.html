@@ -1,13 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maia - Chat</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block content %}
     <div id="chat-container">
         <div class="message ai-message">Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</div>
         <!-- Messages will appear here -->
@@ -33,5 +26,5 @@
     </form>
 
     <script src="/static/js/main.js"></script>
-</body>
-</html>
+
+{% endblock %}

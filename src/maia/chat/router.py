@@ -1,8 +1,7 @@
 import httpx2
 from fastapi import APIRouter, Request, HTTPException
 import os
-from maia.logging_config import setup_logging, logger
-
+from maia.logging_config import logger
 
 
 router = APIRouter()
@@ -34,6 +33,7 @@ async def chat(request: Request):
     }
 
     async with httpx2.AsyncClient(timeout=None) as client:
+        error_message = "Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée."
         try:
             response = await client.post(
                 f"{GATEWAY_URL}/v1/chat/completions",
@@ -51,9 +51,9 @@ async def chat(request: Request):
             return f'<div class="message ai-message">{ai_response}</div>'
             
         except httpx2.HTTPStatusError as e:
-            logger.error(f"DEBUG_LOG_TEST: Gateway HTTP Error: {e.response.status_code} - {e.response.text}", exc_info=True)
+            logger.error(f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}", exc_info=True)
             logger.info("Attempting to write to log file...")
-            return '<div class="message ai-message">Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>'
+            return f'<div class="message ai-message">{error_message}</div>'
         except Exception as e:
             logger.error(f"Unexpected error in chat router: {str(e)}", exc_info=True)
-            return '<div class="message ai-message">Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>'
+            return f'<div class="message ai-message">{error_message}</div>'
