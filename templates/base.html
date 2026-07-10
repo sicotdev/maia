@@ -3,22 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maia</title>
+    <title>M.A.I.A</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header>
-        Maia
+        <h1>M.A.I.A</h1>
+        <nav>
+            <a href="/">Messages textes</a> 
+            <span>-</span>
+            <a href="/voice">Appel vocal</a>
+        </nav>
+        <div id="settings">
+            <button id="settings-btn">⚙️ Paramètres</button>
+        </div>
     </header>
 
     <main>
-        {% block content %}{% endblock %}
+        <div id="left-panel">
+            {% include "parts/history.html" %}
+        </div>
+        <div id="right-panel">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Maia Project</p>
+        &copy; 2026 M.A.I.A Project
     </footer>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 {% block content %}
     <div id="chat-container">
-        <div class="message ai-message">Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</div>
+        <div class="message ai-message"><p>Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</p></div>
         
         <!-- Messages will appear here -->
 
@@ -21,13 +21,13 @@
           hx-on::before-request="handleChatBeforeRequest(event)"
           hx-on::after-request="handleChatAfterRequest(event)">
         <div class="input-area">
-            <input type="text" name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off">
+            <textarea name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off"></textarea>
             <button type="button" id="stt-btn" class="stt-btn" title="Dictée vocale">🎤</button>
             <button type="submit">Envoyer</button>
         </div>
+        <input type="hidden" name="previous_response_id" id="previous_response_id" autocomplete="off">
     </form>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="/static/js/main.js"></script>
+    <script src="/static/js/chat.js"></script>
 
 {% endblock %}

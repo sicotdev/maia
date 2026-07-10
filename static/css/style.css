@@ -3,8 +3,13 @@
     --chat-bg: #252526;
     --text-color: #d4d4d4;
     --accent-color: #007acc;
+    --link-color: #7bcaff;
     --input-bg: #3c3c3c;
     --border-color: #404040;
+}
+
+* { 
+    box-sizing: border-box;
 }
 
 body {
@@ -18,7 +23,58 @@ body {
     height: 100vh;
 }
 
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+header {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    height: 60px;
+}
+
 main {
+    flex-grow: 1;
+    display: flex;
+    min-height: 200px; 
+}
+
+footer {
+    padding: 10px 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+    font-size: 0.9em;
+}
+
+#left-panel {
+    flex-shrink: 0;
+    width: 250px;
+    background-color: var(--chat-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#conversation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#conversation-list h2 {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+#conversation-list li {
+    margin-bottom: 10px;
+}
+
+#right-panel {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -31,15 +87,28 @@ main {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    position: relative;
+}
+
+#voice-container {
+    padding: 20px;
+    background-color: var(--chat-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
 }
 
 .message {
     max-width: 80%;
-    padding: 10px 15px;
     border-radius: 15px;
     line-height: 1.5;
     word-wrap: break-word;
+}
+
+.message p {
+    margin: 0;
+    padding: 10px 15px;
 }
 
 .user-message {
@@ -70,7 +139,7 @@ main {
     align-items: center;
 }
 
-input[type="text"] {
+#user-input {
     flex: 1;
     padding: 12px;
     border-radius: 20px;
@@ -78,6 +147,10 @@ input[type="text"] {
     background-color: var(--input-bg);
     color: white;
     outline: none;
+    resize: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 40px;
 }
 
 button {
