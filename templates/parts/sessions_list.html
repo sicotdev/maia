@@ -1,0 +1,45 @@
+{% for session in sessions %}
+    <li class="session-row" hx-on:htmx:load="formatTimestamps(this)">
+        <span class="preview">{{ session.preview }}</span>
+
+        <div class="tooltip">
+
+            <div class="tooltip-header">
+                <div class="tooltip-preview">« salut, on va travailler sur le projet maia »</div>
+            </div>
+
+            <div class="tooltip-grid">
+                
+                <div class="metric">
+                    <span class="label">Messages</span>
+                    <span class="value">{{ session.message_count }}</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Tokens entrée</span>
+                    <span class="value accent">{{ session.input_tokens }}</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Appels d'outils</span>
+                    <span class="value">{{ session.tool_call_count }}</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Tokens sortie</span>
+                    <span class="value accent">{{ session.output_tokens }}</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Appels API</span>
+                    <span class="value">{{ session.api_call_count }}</span>
+                </div>
+                <div class="metric">
+                    <span class="label">Coût estimé</span>
+                    <span class="value warn">$ {{ session.estimated_cost_usd }}</span>
+                </div>
+            </div>
+
+            <div class="tooltip-footer">
+                <div><div>démarré</div> <div class="timestamp">{{ session.started_at }}</div></div>
+                <div><div>dernière activité</div> <div class="timestamp">{{ session.last_active }}</div></div>
+            </div>
+        </div>
+    </li>
+{% endfor %}

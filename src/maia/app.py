@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from maia.templating import templates
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import uvicorn
@@ -13,21 +13,20 @@ load_dotenv()
 # Launch app
 app = FastAPI(title="Maia Gateway")
 
-# Setup templates and static files
-templates = Jinja2Templates(directory="templates")
-
 # Mount static files
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
 from maia.chat.router import router as chat_router
+from maia.history.router import router as sessions_router
 app.include_router(chat_router)
+app.include_router(sessions_router)
 
 # Serve index.html at the root path
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+    return templates.TemplateResponse(request=request, name="index.html", context={"DEBUG": os.getenv("DEBUG", "False") == "True"})
 
 # Serve voice.html at the /voice path
 @app.get("/voice", response_class=HTMLResponse)

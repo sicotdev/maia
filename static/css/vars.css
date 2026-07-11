@@ -1,0 +1,20 @@
+:root {
+    --bg-color: #0d1117;
+    --chat-bg: #0d1117;
+    --text-color: #d7dde4;
+    --accent-color: #007acc;
+    --accent-dim: #7bcaff;
+    --link-color: #7bcaff;
+    --input-bg: #3c3c3c;
+    --border-color: #263140;
+
+    --text-dim: #7c8896;
+    --warn: #e0a458;
+
+    --panel-color: #12181f;
+    --panel-border-color: #263140;
+    --panel-accent: #5fd3a3;
+
+    --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "Inter", "Segoe UI", sans-serif;
+}
