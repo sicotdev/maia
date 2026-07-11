@@ -5,6 +5,8 @@ function handleChatBeforeRequest(event) {
 
     document.getElementById('user-input').value = '';
 }
+
+//TODO: use SSE 
 //AI new message
 function handleChatAfterRequest(event) {
     const data = JSON.parse(event.detail.xhr.responseText);
@@ -18,13 +20,21 @@ function handleChatAfterRequest(event) {
 }
 
 //Parse new chat line with markdown and append to chat container
-//TODO: use SSE 
 function appendChatLine(message, className) {
     const container = document.getElementById('chat-container');
     const chat_line = document.createElement('div');
     chat_line.className = 'message ' + className;
     chat_line.innerHTML = marked.parse(message, { breaks: true, gfm: true });
     container.appendChild(chat_line);
+}
+
+function onChatLoad(chatContainer) {
+    chatContainer.querySelectorAll('.bubble:not([data-rendered])').forEach(bubble => {
+      bubble.innerHTML = DOMPurify.sanitize(
+        marked.parse(bubble.textContent, { breaks: true, gfm: true })
+      );
+      bubble.setAttribute('data-rendered', 'true');
+    });
 }
 
 //New line on Shift+Enter, submit on Enter

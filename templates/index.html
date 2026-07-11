@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div id="chat-container">
+    <div id="chat-container" hx-on:htmx:load="onChatLoad(this)">
         <div class="message ai-message"><p>Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</p></div>
         
         <!-- Messages will appear here -->
@@ -14,12 +14,10 @@
     </div>
 
     <form id="chat-form" 
-          hx-post="/chat" 
-          hx-swap="none"
+          hx-post="/chat/start" hx-target="#chat-stream" hx-swap="innerHTML"
           hx-trigger="submit"
           hx-indicator="#loading-spinner"
-          hx-on::before-request="handleChatBeforeRequest(event)"
-          hx-on::after-request="handleChatAfterRequest(event)">
+          hx-on::before-request="handleChatBeforeRequest(event)">
         <div class="input-area">
             <textarea name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off"></textarea>
             <button type="button" id="stt-btn" class="stt-btn" title="Dictée vocale">🎤</button>
@@ -27,6 +25,9 @@
         </div>
         <input type="hidden" name="previous_response_id" id="previous_response_id" autocomplete="off">
     </form>
+
+    <!--TMP-->
+    <div id="chat-stream"></div>
 
     <script src="/static/js/chat.js"></script>
     <script src="/static/js/history.js"></script>

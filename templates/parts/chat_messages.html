@@ -20,7 +20,7 @@
         {# ---- tool calls issued by the assistant (collapsed by default) ---- #}
         {% if msg.tool_steps %}
             <details class="tool-steps">
-                <summary>tool calls</summary>
+                <summary>tool calls ({{ msg.tool_steps|length }})</summary>
                 {% for call in msg.tool_steps %}
                 <details class="details-body">
                     <summary><span class="fn-name">{{ call.name }}</span>(<span class="fn-args">{{ call.arguments }}</span>)</summary>
