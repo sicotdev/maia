@@ -1,5 +1,5 @@
 {% for session in sessions %}
-    <li class="session-row" hx-on:htmx:load="formatTimestamps(this)">
+    <li class="session-row" hx-on:htmx:load="onSessionLoaded(this)">
         <span class="preview">{{ session.preview }}</span>
 
         <div class="tooltip">
