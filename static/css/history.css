@@ -104,16 +104,17 @@
     color: var(--warn);
 }
 
+.timestamp {
+    color: var(--text-color);
+}
+
 .tooltip-footer {
     margin-top: 12px;
     padding-top: 8px;
     border-top: 1px solid var(--panel-border-color);
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
     color: var(--text-dim);
     font-size: 11px;
-}
-
-.tooltip-footer > div {
-    width: 50%;
 }

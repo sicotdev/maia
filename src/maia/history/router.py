@@ -18,18 +18,20 @@ async def load_sessions(request: Request):
         "Content-Type": "application/json",
     }
 
+    offset = request.query_params.get("offset", 0)
+
     async with httpx2.AsyncClient(timeout=None) as client:
         
         try:
             response = await client.get(
                 f"{GATEWAY_URL}/api/sessions",
                 headers=headers,
+                params={"offset": offset}
             )
-            response.raise_for_status()
+            response.raise_for_status() 
             result = response.json()
-            sessions = result.get("data", [])
-            print(f"Loaded sessions: {sessions[0]}")  # Debugging line
-            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"sessions": sessions})
+            print(f"Loaded sessions: {len(result.get('data', []))}")  # Debugging line
+            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"result": result})
         except Exception as e:
             logger.error(f"Unexpected error in load_sessions: {str(e)}", exc_info=True)
-            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"sessions": []})
+            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"result": {"data": [], "has_more": False}})

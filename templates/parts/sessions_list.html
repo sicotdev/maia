@@ -1,11 +1,11 @@
-{% for session in sessions %}
+{% for session in result.data %}
     <li class="session-row" hx-on:htmx:load="onSessionLoaded(this)">
         <span class="preview">{{ session.preview }}</span>
 
         <div class="tooltip">
 
             <div class="tooltip-header">
-                <div class="tooltip-preview">« salut, on va travailler sur le projet maia »</div>
+                <div class="tooltip-preview">« {{ session.preview }} »</div>
             </div>
 
             <div class="tooltip-grid">
@@ -37,9 +37,22 @@
             </div>
 
             <div class="tooltip-footer">
-                <div><div>démarré</div> <div class="timestamp">{{ session.started_at }}</div></div>
-                <div><div>dernière activité</div> <div class="timestamp">{{ session.last_active }}</div></div>
+                <div><div>Démarré</div> <div class="timestamp">{{ session.started_at }}</div></div>
+                <div><div>Dernière activité</div> <div class="timestamp">{{ session.last_active }}</div></div>
             </div>
         </div>
     </li>
 {% endfor %}
+
+{% if result.has_more %}
+    <div class="load-more"
+    hx-get="/sessions?offset={{ result.offset + result.limit }}"
+    hx-trigger="intersect once"
+    hx-swap="outerHTML">
+        Chargement...
+    </div>
+{% endif %}
+
+{% if not result.data %}
+    <li class="no-sessions">Aucune session trouvée.</li>
+{% endif %}

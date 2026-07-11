@@ -1,8 +1,7 @@
-<h2>Historique des conversations</h2>
 <ul id="conversation-list">
     <div hx-get="/sessions"
-    hx-trigger="revealed"
-    hx-swap="afterend">
+    hx-trigger="intersect once"
+    hx-swap="outerHTML">
         Chargement...
     </div>
 </ul>

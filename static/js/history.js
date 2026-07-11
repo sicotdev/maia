@@ -3,7 +3,7 @@ function onSessionLoaded(container) {
     const timestamps = container.querySelectorAll(".timestamp");
     timestamps.forEach(span => {
         const date = new Date(parseInt(span.textContent) * 1000);
-        span.textContent = date.toLocaleString();
+        span.textContent = date.toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
     });
 
     // Handle tooltip visibility on hover and focus
@@ -17,7 +17,7 @@ function handleHistoryTooltip(container) {
     // Remember where it came from so we can put it back
     const originalParent = tooltip.parentNode;
     const originalNextSibling = tooltip.nextSibling;
-    
+
     // Show on mouseenter or focus
     container.addEventListener('mouseenter', () => showTooltip(container, tooltip));
     container.addEventListener('focus', () => showTooltip(container, tooltip), true); // true for capture phase
