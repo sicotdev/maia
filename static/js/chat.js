@@ -1,6 +1,6 @@
 //User new message
 function handleChatBeforeRequest(event) {
-    appendChatLine(document.getElementById('user-input').value, 'user-message');
+    appendChatLine(document.getElementById('user-input').value, 'role-user');
     console.log('User message:', document.getElementById('user-input').value);  // Log the user message for debugging
 
     document.getElementById('user-input').value = '';
@@ -11,12 +11,14 @@ function handleChatAfterRequest(event) {
     
     console.log('Response data:', data);  // Log the response data for debugging
 
-    appendChatLine(data.content, data.error ? 'error-message' : 'ai-message');
+    appendChatLine(data.content, data.error ? 'role-error' : 'role-assistant');
     if (data.response_id) {
         document.getElementById('previous_response_id').value = data.response_id;
     }
 }
 
+//Parse new chat line with markdown and append to chat container
+//TODO: use SSE 
 function appendChatLine(message, className) {
     const container = document.getElementById('chat-container');
     const chat_line = document.createElement('div');

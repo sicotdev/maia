@@ -1,5 +1,9 @@
 {% for session in result.data %}
-    <li class="session-row" hx-on:htmx:load="onSessionLoaded(this)">
+    <li class="session-row" 
+        hx-on:htmx:load="onSessionLoaded(this)"
+        hx-get="/chat/{{ session.id }}"
+        hx-target="#chat-container"
+        hx-trigger="click">
         <span class="preview">{{ session.preview }}</span>
 
         <div class="tooltip">
