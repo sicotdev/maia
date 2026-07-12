@@ -1,0 +1,23 @@
+{# user-message #}
+{% include "parts/chat_message.html" %}
+
+{# ai stream response #}
+<div
+    id="message_stream"
+    class="message role-assistant"
+    hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" hx-on:htmx:sse-close="onChatStreamEnd(event)"
+    >
+    <div id="tools" sse-swap="tool_call" hx-swap="beforeend"></div>
+    {# Hidden div with the raw text before marked parsing and DOMPurify sanitization #}
+    <div id="answer-raw"
+        sse-swap="text_delta"
+        hx-swap="beforeend"
+        style="display:none"
+        hx-on::after-swap="document.getElementById('answer').innerHTML = DOMPurify.sanitize(marked.parse(this.textContent, { breaks: true, gfm: true }))"
+    ></div>
+    {# Displayed answer #}
+    <div id="answer"><p><span class="spinner"></span></p></div>
+
+    <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#answer"></div>
+    <div sse-swap="done" hx-swap="none"></div>
+</div>

@@ -1,10 +1,6 @@
 function onSessionLoaded(container) {
     // Format timestamps in the session tooltip
-    const timestamps = container.querySelectorAll(".timestamp");
-    timestamps.forEach(span => {
-        const date = new Date(parseInt(span.textContent) * 1000);
-        span.textContent = date.toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    });
+    formatTimestamps(container);
 
     // Handle tooltip visibility on hover and focus
     handleHistoryTooltip(container);

@@ -1,38 +1,3 @@
 {% for msg in messages %}
-<div class="message role-{{ msg.role }}">
-   
-    <div class="bubble-col">
-        <div class="meta-row">
-            <span class="role-name">{{ msg.role }}</span>
-            <span>-</span>
-            {% if msg.timestamp %}<span class="timestamp">{{ msg.timestamp }}</span>{% endif %}
-        </div>
-
-        {# ---- reasoning / chain-of-thought (collapsed by default) ---- #}
-        {% if msg.reasoning and msg.reasoning|length > 1 %}
-        <details class="reasoning">
-            <summary>reasoning</summary>
-            {# remove first line break #}
-            <div class="details-body">{{ msg.reasoning[1:] }}</div>
-        </details>
-        {% endif %}
-
-        {# ---- tool calls issued by the assistant (collapsed by default) ---- #}
-        {% if msg.tool_steps %}
-            <details class="tool-steps">
-                <summary>tool calls ({{ msg.tool_steps|length }})</summary>
-                {% for call in msg.tool_steps %}
-                <details class="details-body">
-                    <summary><span class="fn-name">{{ call.name }}</span>(<span class="fn-args">{{ call.arguments }}</span>)</summary>
-                    <div class="details-body"><span class="fn-output">{{ call.output }}</span></div>
-                </details>
-                {% endfor %}
-             </details>
-        {% endif %}
-
-        {# ---- main text content ---- #}
-        <div class="bubble">{{ msg.content }}</div>
-
-    </div>
-</div>
+    {% include "parts/chat_message.html" %}
 {% endfor %}

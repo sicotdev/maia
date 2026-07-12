@@ -1,9 +1,11 @@
 import os
 import httpx2
 import json
+import time
+from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from maia.gateway import GATEWAY_APIKEY, GATEWAY_URL, get_gateway_headers
+from fastapi.responses import StreamingResponse, JSONResponse
+from maia.gateway import GATEWAY_URL, get_gateway_headers
 from maia.logging_config import logger
 from maia.templating import templates
 
@@ -21,10 +23,10 @@ def _sse(event: str, html_fragment: str) -> str:
     return f"event: {event}\n{payload}\n\n"
 
 
+# Receives the classic htmx form and returns the chat_sse container for streaming the answer.
 @router.post("/chat/start")
 async def chat_start(request: Request):
-    """Step 1: receives the classic htmx form and returns the fragment
-    containing the SSE container with the message encoded in the URL."""
+    
     data = await request.form()
     user_message = data.get("message")
     previous_response_id = data.get("previous_response_id") or ""
@@ -32,43 +34,26 @@ async def chat_start(request: Request):
     if not user_message:
         raise HTTPException(status_code=400, detail="No message provided")
 
-    from urllib.parse import urlencode
-
     qs = urlencode({"message": user_message, "previous_response_id": previous_response_id})
+    sse_url = f"/chat/stream?{qs}"
+    
+    return templates.TemplateResponse(request=request, name="parts/chat_sse.html", context={
+        "sse_url": sse_url, 
+        "msg": { "role": "user", "timestamp": time.time(), "content": user_message }
+    })
 
-    html = f"""
-    <div hx-ext="sse" sse-connect="/chat/stream?{qs}" sse-close="done">
-      <div id="tools"></div>
-      <div sse-swap="tool_call" hx-target="#tools" hx-swap="beforeend"></div>
-      <div sse-swap="tool_result" hx-target="#tools" hx-swap="beforeend"></div>
-      <div id="answer-raw"
-           sse-swap="text_delta"
-           hx-swap="beforeend"
-           style="display:none"
-           hx-on::after-swap="document.getElementById('answer').innerHTML = DOMPurify.sanitize(marked.parse(this.textContent, {{ breaks: true, gfm: true }}))"
-      ></div>
-      <div id="answer"></div>
-      <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#answer"></div>
-      <div sse-swap="done" hx-swap="none"></div>
-    </div>
-    """
-    return HTMLResponse(html)
-
-
+# Step 2: opened by EventSource (GET only).
 @router.get("/chat/stream")
 async def chat_stream(request: Request):
-    """Step 2: opened by EventSource (GET only, no body)."""
+    
     user_message = request.query_params.get("message")
     previous_response_id = request.query_params.get("previous_response_id") or None
 
     if not user_message:
         raise HTTPException(status_code=400, detail="No message provided")
 
-    headers = {
-        "Authorization": f"Bearer {GATEWAY_APIKEY}",
-        "Content-Type": "application/json",
-        "Accept": "text/event-stream",
-    }
+    headers = get_gateway_headers()
+    headers["Accept"] = "text/event-stream"
 
     payload = {
         "model": "hermes-llm",
@@ -139,12 +124,25 @@ async def chat_stream(request: Request):
                             if item.get("type") == "function_call":
                                 yield _sse(
                                     "tool_call",
-                                    f"<div class='tool-badge tool-running'>🔧 {escape(item.get('name') or '')}({escape(item.get('arguments') or '')})</div>",
+                                    templates.get_template("parts/chat_tool_call.html").render({
+                                        "call": {
+                                            "name": item.get("name") or "",
+                                            "arguments": item.get("arguments") or "",
+                                            "output": "",
+                                        },
+                                        "sse_swap": f"tool_call_{item.get('call_id')}",
+                                    })
+                                    #f"<div class='tool-badge tool-running'>🔧 {escape(item.get('name') or '')}({escape(item.get('arguments') or '')})</div>",
                                 )
                             elif item.get("type") == "function_call_output":
                                 yield _sse(
-                                    "tool_result",
-                                    f"<div class='tool-badge tool-running'>output: {escape(str(item.get('output') or ''))}</div>",
+                                    f"tool_call_{item.get('call_id')}",
+                                    templates.get_template("parts/chat_tool_call_output.html").render({
+                                        "call": {
+                                            "output": str(item.get("output") or ''),
+                                        }
+                                    })
+                                    #f"<div class='tool-badge tool-running'>output: {escape(str(item.get('output') or ''))}</div>",
                                 )
 
                         elif current_event == "response.output_text.delta":
@@ -189,7 +187,7 @@ async def chat_stream(request: Request):
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # évite le buffering si tu es derrière nginx
+            "X-Accel-Buffering": "no",  # prevent buffering for nginx
         },
     )
 

@@ -1,22 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div id="chat-container" hx-on:htmx:load="onChatLoad(this)">
+    <div id="chat-container" hx-on:htmx:after-settle="onChatLoad(this,event)">
         <div class="message ai-message"><p>Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</p></div>
         
         <!-- Messages will appear here -->
 
     </div>
      
-    <!-- Spinner -->
-    <div id="loading-spinner" class="htmx-indicator" style="padding: 5px 10px; font-size: 0.8em;">
-        Chargement...
-    </div>
 
     <form id="chat-form" 
-          hx-post="/chat/start" hx-target="#chat-stream" hx-swap="innerHTML"
+          hx-post="/chat/start" hx-target="#chat-container" hx-swap="beforeend"
           hx-trigger="submit"
-          hx-indicator="#loading-spinner"
           hx-on::before-request="handleChatBeforeRequest(event)">
         <div class="input-area">
             <textarea name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off"></textarea>
@@ -25,9 +20,6 @@
         </div>
         <input type="hidden" name="previous_response_id" id="previous_response_id" autocomplete="off">
     </form>
-
-    <!--TMP-->
-    <div id="chat-stream"></div>
 
     <script src="/static/js/chat.js"></script>
     <script src="/static/js/history.js"></script>

@@ -1,25 +1,28 @@
 //User new message
 function handleChatBeforeRequest(event) {
-    appendChatLine(document.getElementById('user-input').value, 'role-user');
-    console.log('User message:', document.getElementById('user-input').value);  // Log the user message for debugging
 
+    console.log(event.target);
+    
+    //Disable buttons
+    document.querySelectorAll('#chat-form button').forEach(button => button.disabled = true);
+
+    //Add user message to chat container
+    //appendChatLine(document.getElementById('user-input').value, 'role-user');
     document.getElementById('user-input').value = '';
 }
 
-//TODO: use SSE 
-//AI new message
-function handleChatAfterRequest(event) {
-    const data = JSON.parse(event.detail.xhr.responseText);
-    
-    console.log('Response data:', data);  // Log the response data for debugging
+function onChatStreamEnd(event) {
+    //Re-enable buttons
+    document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
 
-    appendChatLine(data.content, data.error ? 'role-error' : 'role-assistant');
-    if (data.response_id) {
-        document.getElementById('previous_response_id').value = data.response_id;
-    }
+    //TODO
+    //formatTimestamps(chatContainer);
 }
 
+
 //Parse new chat line with markdown and append to chat container
+//TODO: call onChatLoad like other messages
+/*
 function appendChatLine(message, className) {
     const container = document.getElementById('chat-container');
     const chat_line = document.createElement('div');
@@ -27,14 +30,19 @@ function appendChatLine(message, className) {
     chat_line.innerHTML = marked.parse(message, { breaks: true, gfm: true });
     container.appendChild(chat_line);
 }
+    */
 
-function onChatLoad(chatContainer) {
-    chatContainer.querySelectorAll('.bubble:not([data-rendered])').forEach(bubble => {
-      bubble.innerHTML = DOMPurify.sanitize(
-        marked.parse(bubble.textContent, { breaks: true, gfm: true })
+function onChatLoad(chatContainer, event) {
+    //console.trace('htmx:load fired', event.target)
+
+    chatContainer.querySelectorAll('.message-text:not([data-rendered]), .reasoning .details-body:not([data-rendered])').forEach(text => {
+      text.innerHTML = DOMPurify.sanitize(
+        marked.parse(text.textContent, { breaks: true, gfm: true })
       );
-      bubble.setAttribute('data-rendered', 'true');
+      text.setAttribute('data-rendered', 'true');
     });
+
+    formatTimestamps(chatContainer);
 }
 
 //New line on Shift+Enter, submit on Enter

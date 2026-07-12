@@ -1,0 +1,28 @@
+<div class="message role-{{ msg.role }}">
+    <div class="message-header">
+        {% if msg.timestamp %}<span class="timestamp">{{ msg.timestamp }}</span>{% endif %}
+    </div>
+
+    {# ---- reasoning / chain-of-thought (collapsed by default) ---- #}
+    {% if msg.reasoning and msg.reasoning|length > 1 %}
+    <details class="reasoning">
+        <summary>reasoning</summary>
+        {# remove first line break #}
+        <div class="details-body">{{ msg.reasoning[1:] }}</div>
+    </details>
+    {% endif %}
+
+    {# ---- tool calls issued by the assistant (collapsed by default) ---- #}
+    {% if msg.tool_steps %}
+    <details class="tool-steps">
+        <summary>tool calls ({{ msg.tool_steps|length }})</summary>
+        {% for call in msg.tool_steps %}
+            {% include "parts/chat_tool_call.html" %}
+        {% endfor %}
+    </details>
+    {% endif %}
+
+    {# ---- main text content ---- #}
+    <div class="message-text">{{ msg.content }}</div>
+
+</div>
