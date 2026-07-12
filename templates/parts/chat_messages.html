@@ -1,3 +1,9 @@
 {% for msg in messages %}
     {% include "parts/chat_message.html" %}
 {% endfor %}
+{% if session_id %}
+<input type="hidden" name="session_id" id="session_id" autocomplete="off"
+    value="{{ session_id }}"
+    hx-swap-oob='true'
+ >
+ {% endif %}

@@ -56,8 +56,7 @@
 }
 
 .message.role-assistant .message-text {
-    background-color: #e9e9eb;
-    color: #1c1c1e;
+    border: 1px var(--border-color) solid;
     border-bottom-left-radius: 4px;
 }
 

@@ -11,9 +11,13 @@ function handleChatBeforeRequest(event) {
     document.getElementById('user-input').value = '';
 }
 
-function onChatStreamEnd(event) {
+function onChatStreamEnd(container) {
     //Re-enable buttons
     document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
+
+    console.log(container);
+    //TODO: remove message_raw
+    //.answer-raw
 
     //TODO
     //formatTimestamps(chatContainer);

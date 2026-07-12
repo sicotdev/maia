@@ -2,6 +2,7 @@ import os
 import httpx2
 import json
 import time
+import uuid
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -18,10 +19,27 @@ from html import escape
 def _sse(event: str, html_fragment: str) -> str:
     # SSE does not allow raw line breaks inside a "data:" field,
     # so each HTML fragment line is prefixed with "data: ".
-    lines = html_fragment.splitlines() or [""]
+    lines = html_fragment.split("\n")
     payload = "\n".join(f"data: {line}" for line in lines)
     return f"event: {event}\n{payload}\n\n"
 
+# Create an empty session
+async def create_session() -> str:
+    async with httpx2.AsyncClient(timeout=None) as client:
+
+        headers = get_gateway_headers()
+
+        print(f"posting to api/sessions")
+
+        resp = await client.post(
+            f"{GATEWAY_URL}/api/sessions",
+            headers=headers,
+            json={},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        
+        return data["session"]
 
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
 @router.post("/chat/start")
@@ -29,17 +47,31 @@ async def chat_start(request: Request):
     
     data = await request.form()
     user_message = data.get("message")
-    previous_response_id = data.get("previous_response_id") or ""
+    session_id = data.get("session_id")
 
     if not user_message:
         raise HTTPException(status_code=400, detail="No message provided")
 
-    qs = urlencode({"message": user_message, "previous_response_id": previous_response_id})
+    #We need to create the session
+    session = None
+    hx_swap = False
+    if not session_id:
+        hx_swap = True
+        session = await create_session()
+        session_id = session["id"]
+        session["preview"] = user_message
+        if len(session["preview"]) > 63:
+            session["preview"] = session["preview"][:60] + "..."
+
+    print(f"session_id is {session_id}")
+
+    qs = urlencode({"message": user_message, "session_id": session_id })
     sse_url = f"/chat/stream?{qs}"
-    
+
     return templates.TemplateResponse(request=request, name="parts/chat_sse.html", context={
         "sse_url": sse_url, 
-        "msg": { "role": "user", "timestamp": time.time(), "content": user_message }
+        "msg": { "role": "user", "timestamp": time.time(), "content": user_message },
+        "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex
     })
 
 # Step 2: opened by EventSource (GET only).
@@ -47,35 +79,24 @@ async def chat_start(request: Request):
 async def chat_stream(request: Request):
     
     user_message = request.query_params.get("message")
-    previous_response_id = request.query_params.get("previous_response_id") or None
+    session_id = request.query_params.get("session_id")
 
-    if not user_message:
-        raise HTTPException(status_code=400, detail="No message provided")
+    if not user_message or not session_id:
+        raise HTTPException(status_code=400, detail="Invalid Parameters")
 
     headers = get_gateway_headers()
-    headers["Accept"] = "text/event-stream"
-
-    payload = {
-        "model": "hermes-llm",
-        "input": user_message,
-        "stream": True,
-        "store": True,
-    }
-    if previous_response_id:
-        payload["previous_response_id"] = previous_response_id
 
     async def event_generator():
         # Track in-progress function calls so we can reconstruct the name and arguments
         # once the argument stream finishes (they arrive as deltas).
         pending_calls = {}  # index -> {"name": ..., "arguments": "..."}
-        response_id = None
 
         try:
             async with httpx2.AsyncClient(timeout=None) as client:
                 async with client.stream(
                     "POST",
-                    f"{GATEWAY_URL}/v1/responses",
-                    json=payload,
+                    f"{GATEWAY_URL}/api/sessions/{session_id}/chat/stream",
+                    json={"input": user_message},
                     headers=headers,
                 ) as response:
                     if response.status_code >= 400:
@@ -91,6 +112,7 @@ async def chat_stream(request: Request):
                         return
 
                     current_event = None
+                    tool_index = 0
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
@@ -115,53 +137,84 @@ async def chat_stream(request: Request):
                             # been reconstructed from the progressive events.
                             continue
 
-                        if current_event == "response.created":
-                            response_id = event_data.get("response", {}).get("id") or event_data.get("id")
+                        if current_event == "run.started":
+                            yield _sse(
+                                "started",
+                                f"<input type='hidden' id='session_id' name='session_id' "
+                                f"value='{session_id}' hx-swap-oob='true'>"
+                            )
 
-                        elif current_event == "response.output_item.added":
-                            item = event_data.get("item", {})
-                            index = event_data.get("index")
-                            if item.get("type") == "function_call":
-                                yield _sse(
-                                    "tool_call",
-                                    templates.get_template("parts/chat_tool_call.html").render({
-                                        "call": {
-                                            "name": item.get("name") or "",
-                                            "arguments": item.get("arguments") or "",
-                                            "output": "",
-                                        },
-                                        "sse_swap": f"tool_call_{item.get('call_id')}",
-                                    })
-                                    #f"<div class='tool-badge tool-running'>🔧 {escape(item.get('name') or '')}({escape(item.get('arguments') or '')})</div>",
-                                )
-                            elif item.get("type") == "function_call_output":
-                                yield _sse(
-                                    f"tool_call_{item.get('call_id')}",
-                                    templates.get_template("parts/chat_tool_call_output.html").render({
-                                        "call": {
-                                            "output": str(item.get("output") or ''),
-                                        }
-                                    })
-                                    #f"<div class='tool-badge tool-running'>output: {escape(str(item.get('output') or ''))}</div>",
-                                )
+                        elif current_event == "tool.started":
+                            yield _sse(
+                                "tool_call",
+                                templates.get_template("parts/chat_tool_call.html").render({
+                                    "call": {
+                                        "name": event_data.get("tool_name"),
+                                        "arguments": event_data.get("args") or "",
+                                        "output": "",
+                                    },
+                                    "sse_swap": f"tool_call_{tool_index}",
+                                })
+                            )
+                            tool_index += 1
 
-                        elif current_event == "response.output_text.delta":
+                        #TODO: no output until run.completed
+                        # elif current_event == "tool.completed":
+                            
+                        #     yield _sse(
+                        #         f"tool_call_{tool_index}",
+                        #         templates.get_template("parts/chat_tool_call_output.html").render({
+                        #             "call": {
+                        #                 "output": str(event_data.get("output") or ''),
+                        #             }
+                        #         })
+                        #     )
+                        
+
+                        elif current_event == "assistant.delta":
                             delta = event_data.get("delta", "")
                             if delta:
-                                yield _sse("text_delta", escape(delta))
+                                yield _sse("text_delta", delta)
 
-                        elif current_event == "response.completed":
-                            # End-of-stream signal only: we do not read
-                            # event_data["response"]["output"] (which may be very large or truncated),
-                            # because everything has already been streamed.
+                        elif current_event == "run.completed":
+                            timestamp = event_data.get("ts")
+                            yield _sse(
+                                "timestamp", 
+                                f"<span class='timestamp'>{timestamp}</span>"
+                            )
+
+                            #TODO: no output or reasoning until run.completed
+                            #Parse the tools outputs
+                            tool_index = 0
+                            reasoning = ""
+                            for item in event_data.get("messages"):
+                                if (reasoning == "" and item.get('role') == "assistant"):
+                                    reasoning = item.get('reasoning')
+                                    yield _sse(
+                                        "reasoning",
+                                        templates.get_template("parts/chat_reasoning.html").render({
+                                            "msg": {
+                                                "reasoning": reasoning,
+                                            }
+                                        })
+                                    )
+                                if (item.get('role') == "tool"):
+                                    yield _sse(
+                                        f"tool_call_{tool_index}",
+                                        templates.get_template("parts/chat_tool_call_output.html").render({
+                                            "call": {
+                                                "output": str(item.get("content") or ''),
+                                            }
+                                        })
+                                    )
+                                    tool_index += 1
+
+                        elif current_event == "done":
                             break
 
-                    # Out-of-band swap: update the hidden field in the main form so the next round
-                    # sends the previous_response_id.
                     yield _sse(
                         "done",
-                        f"<input type='hidden' id='previous_response_id' name='previous_response_id' "
-                        f"value='{escape(response_id or '')}' hx-swap-oob='true'>",
+                        "",
                     )
 
         except httpx2.HTTPStatusError as e:
@@ -350,9 +403,8 @@ async def get_chat_session(request: Request, session_id: str):
 
             print(f"Formatted chat session messages: {messages}")  # Debugging line
 
-            # TODO: we need the last message's response_id to send back as previous_response_id for the next turn.
+            return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": messages, "session_id": session_id})
 
-            return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": messages})
         except Exception as e:
             logger.error(f"Unexpected error in get_chat_session: {str(e)}", exc_info=True)
             return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": [] })
