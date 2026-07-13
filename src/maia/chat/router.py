@@ -175,17 +175,20 @@ async def chat_stream(request: Request):
                                 yield _sse("text_delta", delta)
 
                         elif current_event == "run.completed":
-                            timestamp = event_data.get("ts")
+                            timestamp = event_data.get('ts')
                             yield _sse(
                                 "timestamp", 
                                 f"<span class='timestamp'>{timestamp}</span>"
                             )
 
+                            #TODO
+                            print(event_data.get('usage'))
+
                             #TODO: no output or reasoning until run.completed
                             #Parse the tools outputs
                             tool_index = 0
                             reasoning = ""
-                            for item in event_data.get("messages"):
+                            for item in event_data.get('messages'):
                                 if (reasoning == "" and item.get('role') == "assistant"):
                                     reasoning = item.get('reasoning')
                                     yield _sse(
@@ -361,7 +364,7 @@ async def get_chat_session(request: Request, session_id: str):
             response.raise_for_status() 
             result = response.json()
 
-            print(f"Fetched chat session data: {result}")  # Debugging line
+            #print(f"Fetched chat session data: {result}")  # Debugging line
 
             print(f"Loaded chat session messages: {len(result.get('data', []))}")  # Debugging line
 
@@ -400,7 +403,7 @@ async def get_chat_session(request: Request, session_id: str):
             if last_ai_message is not None:
                 messages.append(last_ai_message)
 
-            print(f"Formatted chat session messages: {messages}")  # Debugging line
+            #print(f"Formatted chat session messages: {messages}")  # Debugging line
 
             return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": messages, "session_id": session_id})
 
