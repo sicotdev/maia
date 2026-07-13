@@ -30,7 +30,7 @@ Maia agit comme un pont entre les utilisateurs et le cœur du système Hermes. G
 ### Installation
 1. Clonez le dépôt :
    ```bash
-   git clone <votre_url_depot>
+   33|   git clone https://github.com/sicotdev/maia
    cd maia
    ```
 
@@ -40,7 +40,7 @@ Maia agit comme un pont entre les utilisateurs et le cœur du système Hermes. G
    ```
 
 3. Configurez vos variables d'environnement :
-   Créez un fichier `.env` à la racine du projet avec les informations nécessaires pour la connexion à votre gateway Hermes.
+   Créez un fichier `.env` à la racine du projet avec les informations nécessaires pour la connexion à votre gateway Hermes (utilisez le fichier `.env.example` comme modèle).
 
 4. Lancez l'application :
    ```bash
@@ -50,6 +50,11 @@ Maia agit comme un pont entre les utilisateurs et le cœur du système Hermes. G
 
 ## 🏗 Structure du projet
 - `src/maia/app.py` : Point d'entrée de l'application FastAPI.
+- `src/maia/chat/` : Gestion des routes de chat.
+- `src/maia/history/` : Gestion des routes d'historique.
+- `src/maia/gateway.py` : Interaction avec la gateway Hermes.
+- `src/maia/logging_config.py` : Configuration des logs.
+- `src/maia/templating.py` : Gestion des templates Jinja2.
 - `templates/` : Contient les fichiers HTML de l'interface.
 - `static/` : Contient les fichiers CSS, JavaScript et autres assets statiques.
 - `tests/` : Suite de tests pour le projet.
