@@ -1,3 +1,43 @@
+<div class="panel-filters">
+    <div class="filter-row">
+        <input type="text" id="filter-query" placeholder="Rechercher une session..." class="filter-input" 
+               hx-get="/sessions" 
+               hx-trigger="keyup changed delay:300ms" 
+               hx-include="#filter-query, #filter-date" 
+               hx-target="#conversation-list">
+        <select id="filter-date" class="filter-select"
+                hx-get="/sessions" 
+                hx-trigger="change delay:300ms" 
+                hx-include="#filter-query, #filter-date" 
+                hx-target="#conversation-list">
+            <option value="all">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois-ci</option>
+        </select>
+    </div>
+    <div class="filter-actions">
+        <button id="btn-selection-mode" class="btn-secondary" title="Mode sélection"
+                hx-get="/sessions"
+                hx-trigger="click"
+                hx-target="#conversation-list"
+                hx-include="#filter-query, #filter-date"
+                hx-vals='{"selectable": "true"}'
+                hx-select="[data-selectable=true]"
+                hx-swap="outerHTML">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002 2v12a2 2 0 00-2 2h-2a2 2 0 00-2-2V7a2 2 0 00-2-2z"></path></svg>
+        </button>
+        <button id="btn-delete-selected" class="btn-danger" disabled title="Supprimer la sélection"
+                hx-post="/sessions/batch-delete"
+                hx-trigger="click"
+                hx-include="input[name='session_ids']"
+                hx-target="#conversation-list">
+            Supprimer la sélection
+        </button>
+    </div>
+</div>
+
+
 <button id="btn-new-session" onclick="sessionNewBtnClick()">Nouvelle session</button>
 
 <ul id="conversation-list">

@@ -9,7 +9,10 @@
     hx-on::before-request="sessionClickBeforeRequest(this)"
     hx-on::after-request="sessionClickAfterRequest()"
     >
+
+    <input type="checkbox" class="selection-checkbox" data-session-id="{{ session.id }}">
     <span class="preview">{{ session.preview }}</span>
+
 
     <div class="tooltip">
 
