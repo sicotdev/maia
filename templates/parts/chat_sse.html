@@ -12,9 +12,9 @@
     hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" hx-on:htmx:sse-close="onChatStreamEnd(this)"
     >
 
-    <div class="message-header" sse-swap="timestamp"></div>
+    <div class="message-header" sse-swap="timestamp" hx-on::after-swap="formatTimestamps(this)"></div>
 
-    <div class="reasoning-container" sse-swap="reasoning"></div>
+    <div class="reasoning-container" sse-swap="reasoning" hx-on::after-swap="parseMd(this.querySelector('.details-body'))"></div>
 
     <div class="tools-container" sse-swap="tool_call" hx-swap="beforeend"></div>
 
@@ -23,10 +23,15 @@
         sse-swap="text_delta"
         hx-swap="beforeend"
         style="display:none"
-        hx-on::after-swap="document.getElementById('message-text-{{ message_id }}').innerHTML = DOMPurify.sanitize(marked.parse(this.textContent, { breaks: true, gfm: true }))"
+        hx-on::after-swap="parseMd(document.getElementById('message-text-{{ message_id }}'), this.textContent)"
     ></div>
     {# Displayed answer #}
     <div id="message-text-{{ message_id }}" class="message-text"><p><span class="spinner"></span></p></div>
 
     <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#message-text-{{ message_id }}"></div>
 </div>
+
+{# new-session hidden value #}
+{% if session %}
+    <input type='hidden' id='session_id' name='session_id' value='{{ session.id }}' hx-swap-oob='true'>
+{% endif %}

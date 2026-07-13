@@ -7,3 +7,15 @@ function formatTimestamps(container) {
         span.setAttribute('data-converted', 'true');
     });
 }
+
+function scrollDown(container) {
+    container.scrollTop = container.scrollHeight
+}
+
+function parseMd(target, textContent) {
+    textContent = textContent !== undefined ? textContent : target.textContent;
+
+    target.innerHTML = DOMPurify.sanitize(
+        marked.parse(textContent, { breaks: true, gfm: true })
+    );
+}

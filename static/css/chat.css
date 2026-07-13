@@ -33,8 +33,21 @@
     word-wrap: break-word;
 }
 
-.message-text p {
-    margin: 0;
+.message p, .message pre, .message code {
+    overflow-wrap: break-word; /* wraps long words if they'd overflow */
+  word-break: break-word;    /* fallback/alternative, breaks mid-word if needed */
+  max-width: 100%;      
+  min-width: 0;
+  white-space: pre-wrap;
+}
+
+
+.message p:only-child {
+    margin: 0
+}
+
+.message li {
+    margin: 5px;
 }
 
 /* User messages: right side, blue bubble */

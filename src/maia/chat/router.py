@@ -116,7 +116,7 @@ async def chat_stream(request: Request):
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
-                        print(f"{raw_line}")  # Debugging line
+                        #print(f"{raw_line}")  # Debugging line
 
                         if line.startswith("event:"):
                             current_event = line[len("event:"):].strip()
@@ -138,11 +138,9 @@ async def chat_stream(request: Request):
                             continue
 
                         if current_event == "run.started":
-                            yield _sse(
-                                "started",
-                                f"<input type='hidden' id='session_id' name='session_id' "
-                                f"value='{session_id}' hx-swap-oob='true'>"
-                            )
+                            # nothing for now
+                            print("stream started")
+                            continue
 
                         elif current_event == "tool.started":
                             yield _sse(
@@ -210,6 +208,7 @@ async def chat_stream(request: Request):
                                     tool_index += 1
 
                         elif current_event == "done":
+                            print("stream done")
                             break
 
                     yield _sse(

@@ -49,3 +49,16 @@ function hideTooltip(tooltip, originalParent, originalNextSibling) {
     // put it back in its original spot in the DOM
     originalParent.insertBefore(tooltip, originalNextSibling);
 }
+
+function sessionClickAfterRequest() {
+    const container = document.getElementById('chat-container');
+
+    //Format timestamps and markdown in chat
+    formatTimestamps(container);
+
+    container.querySelectorAll('.reasoning .details-body, .message-text').forEach(elem => {
+        parseMd(elem);
+    });
+
+    scrollDown(container);
+}

@@ -1,52 +1,43 @@
 //User new message
-function handleChatBeforeRequest(event) {
+function userInputBeforeRequest(event) {
 
-    console.log(event.target);
+    const form = event.target;
     
     //Disable buttons
-    document.querySelectorAll('#chat-form button').forEach(button => button.disabled = true);
+    form.querySelectorAll('button').forEach(button => button.disabled = true);
 
-    //Add user message to chat container
-    //appendChatLine(document.getElementById('user-input').value, 'role-user');
-    document.getElementById('user-input').value = '';
+    //Reset input
+    form.querySelector('#user-input').value = '';
 }
 
-function onChatStreamEnd(container) {
+function userInputAfterRequest(event) {
+
+    //Get message added
+    const container = document.getElementById('chat-container');
+    const userMessages = container.querySelectorAll('.role-user');
+    const newMessage = userMessages[userMessages.length-1];
+
+    //Parse message
+    parseMd(newMessage.querySelector('.message-text'));
+    formatTimestamps(newMessage);
+    scrollDown(container);
+}
+
+function onChatSettle(container, event) {
+ 
+    //console.log(container);
+    //console.log(event.target);
+
+    scrollDown(container);
+}
+
+function onChatStreamEnd(message) {
+    
     //Re-enable buttons
     document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
 
-    console.log(container);
-    //TODO: remove message_raw
-    //.answer-raw
-
-    //TODO
-    //formatTimestamps(chatContainer);
-}
-
-
-//Parse new chat line with markdown and append to chat container
-//TODO: call onChatLoad like other messages
-/*
-function appendChatLine(message, className) {
-    const container = document.getElementById('chat-container');
-    const chat_line = document.createElement('div');
-    chat_line.className = 'message ' + className;
-    chat_line.innerHTML = marked.parse(message, { breaks: true, gfm: true });
-    container.appendChild(chat_line);
-}
-    */
-
-function onChatLoad(chatContainer, event) {
-    //console.trace('htmx:load fired', event.target)
-
-    chatContainer.querySelectorAll('.message-text:not([data-rendered]), .reasoning .details-body:not([data-rendered])').forEach(text => {
-      text.innerHTML = DOMPurify.sanitize(
-        marked.parse(text.textContent, { breaks: true, gfm: true })
-      );
-      text.setAttribute('data-rendered', 'true');
-    });
-
-    formatTimestamps(chatContainer);
+    //Remove streamed answer-raw
+    message.querySelector('.answer-raw').remove();
 }
 
 //New line on Shift+Enter, submit on Enter
