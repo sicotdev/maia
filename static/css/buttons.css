@@ -1,3 +1,5 @@
+a { cursor: pointer; display: inline-block; }
+
 button {
     padding: 10px 20px;
     border-radius: 20px;

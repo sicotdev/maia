@@ -1,12 +1,12 @@
 {# user-message #}
-{% include "parts/chat_message.html" %}
+{% include "chat/chat_message.html" %}
 
 {# new-session #}
 {% if session %}
-    {% include "parts/session_elem.html" %}
+    {% include "session/session.html" %}
 {% endif %}
 
-{# ai stream response #}
+{# ai stream response (identical to chat_message.html but with sse event listeners ) #}
 <div
     class="message role-assistant"
     hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" hx-on:htmx:sse-close="onChatStreamEnd(this)"

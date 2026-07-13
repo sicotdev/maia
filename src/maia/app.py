@@ -28,10 +28,6 @@ app.include_router(sessions_router)
 async def read_root(request: Request):
     return templates.TemplateResponse(request=request, name="index.html", context={"DEBUG": os.getenv("DEBUG", "False") == "True"})
 
-# Serve voice.html at the /voice path
-@app.get("/voice", response_class=HTMLResponse)
-async def read_voice(request: Request):
-    return templates.TemplateResponse(request=request, name="voice.html")
 
 # This is what 'uv run maia' calls
 def main():

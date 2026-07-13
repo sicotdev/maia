@@ -1,5 +1,6 @@
 @import url('vars.css');
 @import url('buttons.css');
 @import url('layout.css');
-@import url('history.css');
+@import url('session.css');
 @import url('chat.css');
+@import url('voice.css');

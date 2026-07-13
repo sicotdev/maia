@@ -6,6 +6,7 @@
     hx-get="/chat/{{ session.id }}"
     hx-target="#chat-container"
     hx-trigger="click"
+    hx-on::before-request="sessionClickBeforeRequest(this)"
     hx-on::after-request="sessionClickAfterRequest()"
     >
     <span class="preview">{{ session.preview }}</span>

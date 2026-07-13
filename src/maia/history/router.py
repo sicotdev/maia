@@ -22,7 +22,7 @@ async def load_sessions(request: Request):
             response.raise_for_status() 
             result = response.json()
             print(f"Loaded sessions: {len(result.get('data', []))}")  # Debugging line
-            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"result": result})
+            return templates.TemplateResponse(request=request, name="session/sessions.html", context={"result": result})
         except Exception as e:
             logger.error(f"Unexpected error in load_sessions: {str(e)}", exc_info=True)
-            return templates.TemplateResponse(request=request, name="parts/sessions_list.html", context={"result": {"data": [], "has_more": False}})
+            return templates.TemplateResponse(request=request, name="session/sessions.html", context={"result": {"data": [], "has_more": False}})

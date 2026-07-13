@@ -29,7 +29,7 @@ async def create_session() -> str:
 
         headers = get_gateway_headers()
 
-        print(f"posting to api/sessions")
+        print(f"creating new session")
 
         resp = await client.post(
             f"{GATEWAY_URL}/api/sessions",
@@ -68,7 +68,7 @@ async def chat_start(request: Request):
     qs = urlencode({"message": user_message, "session_id": session_id })
     sse_url = f"/chat/stream?{qs}"
 
-    return templates.TemplateResponse(request=request, name="parts/chat_sse.html", context={
+    return templates.TemplateResponse(request=request, name="chat/chat_sse.html", context={
         "sse_url": sse_url, 
         "msg": { "role": "user", "timestamp": time.time(), "content": user_message },
         "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex
@@ -145,7 +145,7 @@ async def chat_stream(request: Request):
                         elif current_event == "tool.started":
                             yield _sse(
                                 "tool_call",
-                                templates.get_template("parts/chat_tool_call.html").render({
+                                templates.get_template("chat/parts/chat_tool_call.html").render({
                                     "call": {
                                         "name": event_data.get("tool_name"),
                                         "arguments": event_data.get("args") or "",
@@ -161,7 +161,7 @@ async def chat_stream(request: Request):
                             
                         #     yield _sse(
                         #         f"tool_call_{tool_index}",
-                        #         templates.get_template("parts/chat_tool_call_output.html").render({
+                        #         templates.get_template("chat/parts/chat_tool_call_output.html").render({
                         #             "call": {
                         #                 "output": str(event_data.get("output") or ''),
                         #             }
@@ -193,7 +193,7 @@ async def chat_stream(request: Request):
                                     reasoning = item.get('reasoning')
                                     yield _sse(
                                         "reasoning",
-                                        templates.get_template("parts/chat_reasoning.html").render({
+                                        templates.get_template("chat/parts/chat_reasoning.html").render({
                                             "msg": {
                                                 "reasoning": reasoning,
                                             }
@@ -202,7 +202,7 @@ async def chat_stream(request: Request):
                                 if (item.get('role') == "tool"):
                                     yield _sse(
                                         f"tool_call_{tool_index}",
-                                        templates.get_template("parts/chat_tool_call_output.html").render({
+                                        templates.get_template("chat/parts/chat_tool_call_output.html").render({
                                             "call": {
                                                 "output": str(item.get("content") or ''),
                                             }
@@ -405,8 +405,8 @@ async def get_chat_session(request: Request, session_id: str):
 
             #print(f"Formatted chat session messages: {messages}")  # Debugging line
 
-            return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": messages, "session_id": session_id})
+            return templates.TemplateResponse(request=request, name="chat/chat_messages.html", context={"messages": messages, "session_id": session_id})
 
         except Exception as e:
             logger.error(f"Unexpected error in get_chat_session: {str(e)}", exc_info=True)
-            return templates.TemplateResponse(request=request, name="parts/chat_messages.html", context={"messages": [] })
+            return templates.TemplateResponse(request=request, name="chat/chat_messages.html", context={"messages": [] })

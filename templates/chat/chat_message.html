@@ -6,7 +6,7 @@
     {# ---- reasoning / chain-of-thought (collapsed by default) ---- #}
     <div class="reasoning-container">
         {% if msg.reasoning and msg.reasoning|length > 1 %}
-            {% include "parts/chat_reasoning.html" %}
+            {% include "chat/parts/chat_reasoning.html" %}
         {% endif %}
     </div>
 
@@ -16,7 +16,7 @@
         <details class="tool-steps">
             <summary>tool calls ({{ msg.tool_steps|length }})</summary>
             {% for call in msg.tool_steps %}
-                {% include "parts/chat_tool_call.html" %}
+                {% include "chat/parts/chat_tool_call.html" %}
             {% endfor %}
         </details>
         {% endif %}

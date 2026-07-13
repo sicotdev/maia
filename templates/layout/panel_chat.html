@@ -1,0 +1,20 @@
+<div id="chat-container" hx-on:htmx:after-settle="onChatSettle(this, event)">
+    <div class="message ai-message"><p>Bienvenue sur Maia. Comment puis-je vous aider aujourd'hui ?</p></div>
+    
+    <!-- Messages will appear here -->
+
+</div>
+    
+
+<form id="chat-form" 
+        hx-post="/chat/start" hx-target="#chat-container" hx-swap="beforeend"
+        hx-trigger="submit"
+        hx-on::before-request="userInputBeforeRequest(event)"
+        hx-on::after-request="userInputAfterRequest(event)">
+    <div class="input-area">
+        <textarea name="message" id="user-input" placeholder="Écrivez votre message..." autocomplete="off"></textarea>
+        <button type="button" id="stt-btn" class="stt-btn" title="Dictée vocale">🎤</button>
+        <button type="submit">Envoyer</button>
+    </div>
+    <input type="hidden" name="session_id" id="session_id" autocomplete="off">
+</form>

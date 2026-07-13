@@ -1,10 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M.A.I.A</title>
+
+    <!-- CSS (TODO: minify) -->
     <link rel="stylesheet" href="/static/css/_main.css">
+
     <!-- HTMX -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
     <!-- SSE extension -->
@@ -16,8 +17,12 @@
     <!-- DOMPurify for sanitizing HTML -->
     <script src=" https://cdn.jsdelivr.net/npm/dompurify@3.4.12/dist/purify.min.js "></script>
 
+    <!-- Internal JS (TODO: minify) -->
     <script src="static/js/utils.js"></script>
-    
+    <script src="/static/js/chat.js"></script>
+    <script src="/static/js/session.js"></script>
+    <script src="/static/js/voice.js"></script>
+
     <!--
     {% if DEBUG %}
         <script>
@@ -26,30 +31,3 @@
     {% endif %}
     -->
 </head>
-<body>
-    <header>
-        <h1>M.A.I.A</h1>
-        <nav>
-            <a href="/">Messages textes</a> 
-            <span>-</span>
-            <a href="/voice">Appel vocal</a>
-        </nav>
-        <div id="settings">
-            <button id="settings-btn">⚙️ Paramètres</button>
-        </div>
-    </header>
-
-    <main>
-        <div id="left-panel">
-            {% include "parts/history.html" %}
-        </div>
-        <div id="right-panel">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-
-    <footer>
-        &copy; 2026 M.A.I.A Project
-    </footer>
-</body>
-</html>
