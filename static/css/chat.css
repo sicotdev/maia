@@ -137,3 +137,7 @@ details .details-body {
     box-sizing: border-box;
     min-height: 40px;
 }
+
+.custom-spinner img {
+    height: 50px;
+}
