@@ -18,10 +18,10 @@ if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
-from maia.chat.router import router as chat_router
-from maia.history.router import router as sessions_router
+from maia.voice.router import router as voice_router
 app.include_router(chat_router)
 app.include_router(sessions_router)
+app.include_router(voice_router)
 
 # Serve index.html at the root path
 @app.get("/", response_class=HTMLResponse)
