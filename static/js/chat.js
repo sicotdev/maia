@@ -41,8 +41,6 @@ function onChatStreamDelta(rawAnswer, cleanAnswer) {
 
 function onChatStreamEnd(message) {
 
-    console.log('chat stream end');
-
     //Make sure the function is called once (solve bug when the chat is cleared)
     if (message.dataset.streamEnded) return;
         message.dataset.streamEnded = 'true';
@@ -107,44 +105,4 @@ function initUserInput() {
         textarea.style.height = textarea.scrollHeight + 'px';
     });
 
-}
-
-//Speech-to-text functionality
-function initSTT() {
-    const sttBtn = document.getElementById('stt-btn');
-    let recognition;
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'fr-FR';
-
-        recognition.onstart = () => {
-            sttBtn.classList.add('active');
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById('user-input').value = transcript;
-            sttBtn.classList.remove('active');
-        };
-
-        recognition.onerror = () => {
-            sttBtn.classList.remove('active');
-        };
-
-        recognition.onend = () => {
-            sttBtn.classList.remove('active');
-        };
-    } else {
-        sttBtn.disabled = true;
-    }
-
-    if (sttBtn) {
-        sttBtn.addEventListener('click', () => {
-            recognition.start();
-        });
-    }
 }
