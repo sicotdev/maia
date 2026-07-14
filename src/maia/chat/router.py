@@ -3,6 +3,7 @@ import httpx2
 import json
 import time
 import uuid
+import random
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -71,7 +72,8 @@ async def chat_start(request: Request):
     return templates.TemplateResponse(request=request, name="chat/chat_sse.html", context={
         "sse_url": sse_url, 
         "msg": { "role": "user", "timestamp": time.time(), "content": escape(user_message) },
-        "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex
+        "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex,
+        "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, 11)}.gif"
     })
 
 # Step 2: opened by EventSource (GET only).

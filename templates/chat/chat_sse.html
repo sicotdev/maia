@@ -28,7 +28,7 @@
     {# Displayed answer #}
     <div id="message-text-{{ message_id }}" class="message-text">
         <div class="clean_answer_delta"></div>
-        <span class="custom-spinner" sse-swap="first_event" hx-swap="outerHTML"></span>
+        <span class="custom-spinner" sse-swap="first_event" hx-swap="outerHTML"><img src="{{ thinking_gif }}"></span>
     </div>
     
     <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#message-text-{{ message_id }}"></div>

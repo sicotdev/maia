@@ -51,7 +51,10 @@ function onChatStreamEnd(message) {
     document.querySelectorAll('#chat-form button, #chat-form textarea').forEach(elem => elem.disabled = false);
     
     //Remove streamed answer-raw and spinner
-    message.querySelector('.answer-raw').remove();
+    const answerRaw = message.querySelector('.answer-raw');
+    if (!answerRaw)
+        return; // it means we changed tab and removed the node
+    answerRaw.remove();
     message.querySelector('.spinner').remove();
     
     //Regroup tool calls
