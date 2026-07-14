@@ -35,9 +35,8 @@ function onChatSettle(container, event) {
 }
 
 function onChatStreamDelta(rawAnswer, cleanAnswer) {
-    console.log('delta=' + rawAnswer.textContent);
-    console.log(cleanAnswer);
-    parseMd(cleanAnswer, rawAnswer.textContent);
+    if (rawAnswer && cleanAnswer) //Fix delta received avec steam end
+        parseMd(cleanAnswer, rawAnswer.textContent);
 }
 
 function onChatStreamEnd(message) {
