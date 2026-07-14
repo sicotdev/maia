@@ -113,6 +113,7 @@ async def chat_stream(request: Request):
 
                     current_event = None
                     tool_index = 0
+                    started = False
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
@@ -137,12 +138,19 @@ async def chat_stream(request: Request):
                             # been reconstructed from the progressive events.
                             continue
 
-                        if current_event == "run.started":
-                            # nothing for now
+                        #if current_event == "run.started":
+                        if current_event == "message.started":
+                            #Started received
                             print("stream started")
+                            started = True
                             continue
 
-                        elif current_event == "tool.started":
+                        #Send first_event after message.started received
+                        if (started):
+                            yield _sse("first_event", "<span class='spinner'></span>")
+                            started = False
+
+                        if current_event == "tool.started":
                             yield _sse(
                                 "tool_call",
                                 templates.get_template("chat/parts/chat_tool_call.html").render({

@@ -13,8 +13,8 @@ function initSTT() {
     let microphone;
     let dataArray;
     let framesOfSilence = 0;
-    const SILENCE_THRESHOLD = 0.01; // Ajustable selon la sensibilité
-    const MAX_SILENCE_FRAMES = 30;  // Environ 0.5s à 1s selon le refresh
+    const SILENCE_THRESHOLD = 30;
+    const MAX_SILENCE_FRAMES = 240;
     let stream;
 
     // Handle the button click
@@ -49,6 +49,9 @@ function initSTT() {
                 microphone.connect(analyser);
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
 
+                framesOfSilence = 0;
+                recordStarted = false;
+
                 function checkSilence() {
                     if (!isRecording) return;
                     analyser.getByteFrequencyData(dataArray);
@@ -59,9 +62,11 @@ function initSTT() {
                     let average = sum / dataArray.length;
 
                     if (average < SILENCE_THRESHOLD) {
-                        framesOfSilence++;
+                        if (recordStarted)
+                            framesOfSilence++;
                     } else {
                         framesOfSilence = 0;
+                        recordStarted = true;
                     }
 
                     if (framesOfSilence > MAX_SILENCE_FRAMES) {
@@ -101,7 +106,7 @@ function initSTT() {
             const data = await response.json();
             const inputField = document.getElementById('user-input');
             if (inputField) {
-                inputField.value = data.text;
+                inputField.value += data.text;
                 // Trigger any input events if necessary
                 inputField.dispatchEvent(new Event('input'));
             }
@@ -111,5 +116,3 @@ function initSTT() {
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', initSTT);
