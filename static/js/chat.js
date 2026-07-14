@@ -40,31 +40,35 @@ function onChatStreamDelta(rawAnswer, cleanAnswer) {
 }
 
 function onChatStreamEnd(message) {
-    
-    //console.log('chat stream end with: ', message)
 
+    //Make sure the function is called once (solve bug when the chat is cleared)
+    if (message.dataset.streamEnded) return;
+        message.dataset.streamEnded = 'true';
+
+    //console.log('chat stream end with: ', message)
+    
     //Re-enable buttons
     document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
-
+    
     //Remove streamed answer-raw and spinner
     message.querySelector('.answer-raw').remove();
     message.querySelector('.spinner').remove();
-
+    
     //Regroup tool calls
     const toolContainer = message.querySelector('.tools-container');
     const toolElems = [...toolContainer.childNodes]; //Convert to array to avoid a dynamic child list
     if (toolElems.length == 0)
         return;
-
+    
     const stepContainer = document.createElement("details");
     stepContainer.className = "tool-steps";
-
+    
     const summary = document.createElement("summary");
     summary.textContent = `tool calls (${toolElems.length})`;
-
+    
     stepContainer.appendChild(summary);
     toolElems.forEach((toolElem) => stepContainer.appendChild(toolElem));
-
+    
     toolContainer.appendChild(stepContainer);
 }
 
