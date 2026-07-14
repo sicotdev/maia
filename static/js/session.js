@@ -7,8 +7,6 @@ function onSessionLoaded(container) {
 }
 
 function sessionClickBeforeRequest(session, target) {
-    console.log('session click ', session)
-    //console.log('session click target ', target)
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
     session.classList.add('selected');
 }
@@ -29,6 +27,7 @@ function sessionClickAfterRequest() {
 function sessionNewBtnClick() {
     document.getElementById('chat-container').innerHTML = '';
     document.getElementById('session_id').value = '';
+    document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
 }
 
 

@@ -41,7 +41,7 @@ function onChatStreamDelta(rawAnswer, cleanAnswer) {
 
 function onChatStreamEnd(message) {
     
-    console.log('chat stream end with: ', message)
+    //console.log('chat stream end with: ', message)
 
     //Re-enable buttons
     document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
