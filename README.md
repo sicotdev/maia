@@ -8,10 +8,12 @@ Maia agit comme un pont entre les utilisateurs et le cœur du système Hermes. G
 
 ## ✨ Fonctionnalités principales
 
-- **Accès à distance** : Utilisez la gateway Hermes depuis n'importe quel navigateur.
-- **Envoi de messages** : Interface simplifiée pour communiquer avec les agents.
-- **Exécution de commandes** : Contrôle et exécution de commandes via l'API Gateway de Hermes.
-- **Interface Web** : Une expérience utilisateur fluide et centralisée.
+|- **Accès à distance** : Utilisez la gateway Hermes depuis n'importe quel navigateur.
+|- **Envoi de messages** : Interface simplifiée pour communiquer avec les agents.
+|- **Exécution de commandes** : Contrôle et exécution de commandes via l'API Gateway de Hermes.
+|- **Interface Web** : Une expérience utilisateur fluide et centralisée.
+|- **Support STT (Whisper)** : Intégration de la reconnaissance vocale haute performance.
+|- **Filtres avancés** : Recherche par texte, date et pagination pour les sessions et l'historique.
 
 ## 🛠 Technologies utilisées
 
