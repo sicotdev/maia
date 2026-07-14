@@ -189,16 +189,20 @@ async def chat_stream(request: Request):
                             tool_index = 0
                             reasoning = ""
                             for item in event_data.get('messages'):
-                                if (reasoning == "" and item.get('role') == "assistant"):
-                                    reasoning = item.get('reasoning')
-                                    yield _sse(
-                                        "reasoning",
-                                        templates.get_template("chat/parts/chat_reasoning.html").render({
-                                            "msg": {
-                                                "reasoning": reasoning,
-                                            }
-                                        })
-                                    )
+                                msg_reasonning = item.get('reasoning')
+                                if (msg_reasonning and msg_reasonning.lstrip()):
+                                    if (reasoning == ""):
+                                        reasoning = msg_reasonning
+                                        yield _sse(
+                                            "reasoning",
+                                            templates.get_template("chat/parts/chat_reasoning.html").render({
+                                                "msg": {
+                                                    "reasoning": reasoning,
+                                                }
+                                            })
+                                        )
+                                    else:
+                                        print(f"additionnal reasonning: {msg_reasonning}")
                                 if (item.get('role') == "tool"):
                                     yield _sse(
                                         f"tool_call_{tool_index}",
@@ -381,13 +385,16 @@ async def get_chat_session(request: Request, session_id: str):
                     if last_ai_message is None:
                         last_ai_message = {
                             "role": "assistant",
-                            "reasoning": msg.get("reasoning"),
-                            "content": msg.get("content"),
+                            "reasoning": escape(msg.get("reasoning")),
+                            "content": escape(msg.get("content")),
                             "tool_steps": [],
                             "timestamp": msg.get("timestamp")
                         }
-                    elif msg.get("content") is not None:
-                        last_ai_message["content"] += escape(msg.get("content"))
+                    else:
+                        if msg.get("reasoning") and msg.get("reasoning").lstrip():
+                            last_ai_message["reasoning"] += escape(msg.get("reasoning"))
+                        if msg.get("content") is not None:
+                            last_ai_message["content"] += escape(msg.get("content"))
                     if msg.get("tool_calls") is not None:
                         for tool_call in msg.get("tool_calls"):
                             last_ai_message["tool_steps"].append({
@@ -399,6 +406,8 @@ async def get_chat_session(request: Request, session_id: str):
                 elif msg.get("role") == "tool":
                     # Set the output of the last tool call in the last AI message.
                     last_ai_message["tool_steps"][-1]["output"] = msg.get("content")
+                else:
+                    print(f"unknown role:{msg.get('role')}")
 
             if last_ai_message is not None:
                 messages.append(last_ai_message)

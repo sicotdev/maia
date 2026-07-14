@@ -4,13 +4,9 @@
 
 {% if result.has_more %}
     <div class="load-more"
-    hx-get="/sessions?offset={{ result.offset + result.limit }}&filter-text={{ request.query_params.filter_text }}&filter-date={{ request.query_params.filter_date }}"
+    hx-get="/sessions?offset={{ result.offset + result.limit }}&filter-text={{ filter_text }}&filter-date={{ filter_date }}"
     hx-trigger="intersect once"
     hx-swap="outerHTML">
         <span class="spinner"></span>
     </div>
-{% endif %}
-
-{% if not result.data %}
-    <li class="no-sessions">Aucune session trouvée.</li>
 {% endif %}

@@ -1,39 +1,4 @@
-<div class="panel-filters">
-    <div class="filter-row">
-        <input type="text" id="filter-text" name="filter-text" placeholder="Rechercher une session..." class="filter-input" 
-                       hx-get="/sessions" 
-                       hx-trigger="keyup changed delay:300ms" 
-                       hx-include="#filter-text, #filter-date" 
-                       hx-target="#conversation-list">
-        <select id="filter-date" name="filter-date" class="filter-select"
-                        hx-get="/sessions" 
-                        hx-trigger="change delay:300ms" 
-                        hx-include="#filter-text, #filter-date" 
-                        hx-target="#conversation-list">
-            <option value="all">Toutes les dates</option>
-            <option value="today">Aujourd'hui</option>
-            <option value="week">Cette semaine</option>
-            <option value="month">Ce mois-ci</option>
-        </select>
-    </div>
-    <div class="filter-actions">
-        <button id="btn-selection-mode" class="btn-secondary" title="Mode sélection"
-                hx-on:click="document.getElementById('conversation-list').classList.toggle('is-selection-mode')">
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16" height="16" viewBox="0 0 50 50"
-                style="fill:#FFFFFF;">
-                <path d="M 11 4 C 7.101563 4 4 7.101563 4 11 L 4 39 C 4 42.898438 7.101563 46 11 46 L 39 46 C 42.898438 46 46 42.898438 46 39 L 46 15 L 44 17.3125 L 44 39 C 44 41.800781 41.800781 44 39 44 L 11 44 C 8.199219 44 6 41.800781 6 39 L 6 11 C 6 8.199219 8.199219 6 11 6 L 37.40625 6 L 39 4 Z M 43.25 7.75 L 23.90625 30.5625 L 15.78125 22.96875 L 14.40625 24.4375 L 23.3125 32.71875 L 24.09375 33.4375 L 24.75 32.65625 L 44.75 9.03125 Z"></path>
-            </svg>
-        </button>
-        <button id="btn-delete-selected" class="btn-danger" disabled title="Supprimer la sélection"
-                hx-post="/sessions/batch-delete"
-                hx-trigger="click"
-                hx-include="input[name='session_ids']"
-                hx-target="#conversation-list">
-            Supprimer la sélection
-        </button>
-    </div>
-</div>
-
+{% include "session/filters.html" %}
 
 <button id="btn-new-session" onclick="sessionNewBtnClick()">Nouvelle session</button>
 

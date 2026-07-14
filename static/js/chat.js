@@ -3,8 +3,8 @@ function userInputBeforeRequest(event) {
 
     const form = event.target;
     
-    //Disable buttons
-    form.querySelectorAll('button').forEach(button => button.disabled = true);
+    //Disable buttons & textarea
+    form.querySelectorAll('button, textarea').forEach(elem => elem.disabled = true);
 
     //Reset input
     form.querySelector('#user-input').value = '';
@@ -41,14 +41,16 @@ function onChatStreamDelta(rawAnswer, cleanAnswer) {
 
 function onChatStreamEnd(message) {
 
+    console.log('chat stream end');
+
     //Make sure the function is called once (solve bug when the chat is cleared)
     if (message.dataset.streamEnded) return;
         message.dataset.streamEnded = 'true';
 
     //console.log('chat stream end with: ', message)
     
-    //Re-enable buttons
-    document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
+    //Re-enable buttons and textarea
+    document.querySelectorAll('#chat-form button, #chat-form textarea').forEach(elem => elem.disabled = false);
     
     //Remove streamed answer-raw and spinner
     message.querySelector('.answer-raw').remove();
