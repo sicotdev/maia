@@ -17,6 +17,7 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "librosa>=0.11.0",
     "soundfile>=0.14.0",
+    "torch>=2.13.0",
 ]
 
 [project.scripts]

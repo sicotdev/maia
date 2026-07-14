@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from src.maia.voice.service import transcribe_audio
+from maia.voice.service import transcribe_audio
 import shutil
 import os
 import uuid
