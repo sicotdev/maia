@@ -1,15 +1,15 @@
 <div class="panel-filters">
     <div class="filter-row">
-        <input type="text" id="filter-query" placeholder="Rechercher une session..." class="filter-input" 
-               hx-get="/sessions" 
-               hx-trigger="keyup changed delay:300ms" 
-               hx-include="#filter-query, #filter-date" 
-               hx-target="#conversation-list">
-        <select id="filter-date" class="filter-select"
-                hx-get="/sessions" 
-                hx-trigger="change delay:300ms" 
-                hx-include="#filter-query, #filter-date" 
-                hx-target="#conversation-list">
+        <input type="text" id="filter-text" name="filter-text" placeholder="Rechercher une session..." class="filter-input" 
+                       hx-get="/sessions" 
+                       hx-trigger="keyup changed delay:300ms" 
+                       hx-include="#filter-text, #filter-date" 
+                       hx-target="#conversation-list">
+        <select id="filter-date" name="filter-date" class="filter-select"
+                        hx-get="/sessions" 
+                        hx-trigger="change delay:300ms" 
+                        hx-include="#filter-text, #filter-date" 
+                        hx-target="#conversation-list">
             <option value="all">Toutes les dates</option>
             <option value="today">Aujourd'hui</option>
             <option value="week">Cette semaine</option>

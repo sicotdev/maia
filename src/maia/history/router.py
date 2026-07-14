@@ -11,8 +11,8 @@ router = APIRouter()
 async def load_sessions(request: Request):
     
     offset = request.query_params.get("offset", 0)
-    query = request.query_params.get("query", "").lower()
-    date_filter = request.query_params.get("date", "all")
+    filter_text = request.query_params.get("filter-text", "").lower()
+    date_filter = request.query_params.get("filter-date", "all")
 
     async with httpx2.AsyncClient(timeout=None) as client:
         try:
@@ -32,8 +32,8 @@ async def load_sessions(request: Request):
             for session in data:
                 preview = session.get("preview", "").lower()
                 
-                # Text filter: if query exists, preview must contain it
-                if query and query not in preview:
+                # Text filter: if filter_text exists, preview must contain it
+                if filter_text and filter_text not in preview:
                     continue
                 
                 # Date filter
@@ -53,8 +53,6 @@ async def load_sessions(request: Request):
                         if not is_in_range:
                             continue
                     except (ValueError, TypeError):
-                        # If timestamp is unparseable, we keep the session or skip it? 
-                        # Skipping is safer for consistent filtering.
                         continue
 
                 filtered_data.append(session)
