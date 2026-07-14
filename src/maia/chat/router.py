@@ -70,7 +70,7 @@ async def chat_start(request: Request):
 
     return templates.TemplateResponse(request=request, name="chat/chat_sse.html", context={
         "sse_url": sse_url, 
-        "msg": { "role": "user", "timestamp": time.time(), "content": user_message },
+        "msg": { "role": "user", "timestamp": time.time(), "content": escape(user_message) },
         "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex
     })
 
@@ -172,7 +172,7 @@ async def chat_stream(request: Request):
                         elif current_event == "assistant.delta":
                             delta = event_data.get("delta", "")
                             if delta:
-                                yield _sse("text_delta", delta)
+                                yield _sse("text_delta", escape(delta))
 
                         elif current_event == "run.completed":
                             timestamp = event_data.get('ts')
@@ -376,7 +376,7 @@ async def get_chat_session(request: Request, session_id: str):
                     if last_ai_message is not None:
                         messages.append(last_ai_message)
                         last_ai_message = None
-                    messages.append({"role": "user", "content": msg.get("content"), "timestamp": msg.get("timestamp")})
+                    messages.append({"role": "user", "content": escape(msg.get("content")), "timestamp": msg.get("timestamp")})
                 elif msg.get("role") == "assistant":
                     if last_ai_message is None:
                         last_ai_message = {
@@ -387,7 +387,7 @@ async def get_chat_session(request: Request, session_id: str):
                             "timestamp": msg.get("timestamp")
                         }
                     elif msg.get("content") is not None:
-                        last_ai_message["content"] += msg.get("content")
+                        last_ai_message["content"] += escape(msg.get("content"))
                     if msg.get("tool_calls") is not None:
                         for tool_call in msg.get("tool_calls"):
                             last_ai_message["tool_steps"].append({

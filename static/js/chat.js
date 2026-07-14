@@ -34,6 +34,12 @@ function onChatSettle(container, event) {
     scrollDown(container);
 }
 
+function onChatStreamDelta(rawAnswer, cleanAnswer) {
+    console.log('delta=' + rawAnswer.textContent);
+    console.log(cleanAnswer);
+    parseMd(cleanAnswer, rawAnswer.textContent);
+}
+
 function onChatStreamEnd(message) {
     
     console.log('chat stream end with: ', message)
@@ -41,8 +47,9 @@ function onChatStreamEnd(message) {
     //Re-enable buttons
     document.querySelectorAll('#chat-form button').forEach(button => button.disabled = false);
 
-    //Remove streamed answer-raw
+    //Remove streamed answer-raw and spinner
     message.querySelector('.answer-raw').remove();
+    message.querySelector('.spinner').remove();
 
     //Regroup tool calls
     const toolContainer = message.querySelector('.tools-container');
@@ -67,10 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //TMP because hx-on::oob-after-swap doesn't work
     document.body.addEventListener('htmx:oobAfterSwap', function(evt) {
-    if (evt.detail.target.id === 'conversation-list') {
-        sessionClickBeforeRequest(evt.detail.target.querySelector('li'));
-    }
-});
+        if (evt.detail.target.id === 'conversation-list') {
+            sessionClickBeforeRequest(evt.detail.target.querySelector('li'));
+        }
+    });
     
     initUserInput();
     initSTT();

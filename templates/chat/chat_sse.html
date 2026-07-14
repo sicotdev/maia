@@ -23,11 +23,14 @@
         sse-swap="text_delta"
         hx-swap="beforeend"
         style="display:none"
-        hx-on::after-swap="parseMd(document.getElementById('message-text-{{ message_id }}'), this.textContent)"
+        hx-on::after-swap="onChatStreamDelta(this, document.getElementById('message-text-{{ message_id }}').firstElementChild)"
     ></div>
     {# Displayed answer #}
-    <div id="message-text-{{ message_id }}" class="message-text"><p><span class="spinner"></span></p></div>
-
+    <div id="message-text-{{ message_id }}" class="message-text">
+        <div class="clean_answer_delta"></div>
+        <span class="spinner"></span>
+    </div>
+    
     <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#message-text-{{ message_id }}"></div>
 </div>
 
