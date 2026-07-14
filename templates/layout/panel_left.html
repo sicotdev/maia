@@ -19,7 +19,7 @@
     <div class="filter-actions">
         <button id="btn-selection-mode" class="btn-secondary" title="Mode sélection"
                 hx-on:click="document.getElementById('conversation-list').classList.toggle('is-selection-mode')">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002 2v12a2 2 0 00-2 2h-2a2 2 0 00-2-2V7a2 2 0 00-2-2z"></path></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M15 11h2a2 2 0 012 2v2a2 2 0 01-2 2h-2m0 0V11m0 0h-2m2 0H9m13 4h2a2 2 0 012 2v2a2 2 0 01-2 2h-2m0 0V19m0 0h-2m2 0H9m13 4h2a2 2 0 012 2v2a2 2 0 01-2 2h-2m0 0V23m0 0h-2m2 0H9m13 4h2a2 2 0 012 2v2a2 2 0 01-2 2h-2m0 0V27m0 0h-2m2 0H9"></path></svg>
         </button>
         <button id="btn-delete-selected" class="btn-danger" disabled title="Supprimer la sélection"
                 hx-post="/sessions/batch-delete"
