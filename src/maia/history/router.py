@@ -12,7 +12,7 @@ async def load_sessions(request: Request):
     
     offset = request.query_params.get("offset", 0)
     filter_text = request.query_params.get("filter-text", "").lower()
-    date_filter = request.query_params.get("filter-date", "all")
+    filter_date = request.query_params.get("filter-date", "all")
 
     async with httpx2.AsyncClient(timeout=None) as client:
         try:
@@ -38,16 +38,16 @@ async def load_sessions(request: Request):
                 
                 # Date filter
                 started_at = session.get("started_at")
-                if started_at and date_filter != "all":
+                if started_at and filter_date != "all":
                     try:
                         ts = float(started_at)
                         is_in_range = False
                         
-                        if date_filter == "today":
+                        if filter_date == "today":
                             is_in_range = (now - 86400 <= ts <= now)
-                        elif date_filter == "week":
+                        elif filter_date == "week":
                             is_in_range = (now - 604800 <= ts <= now)
-                        elif date_filter == "month":
+                        elif filter_date == "month":
                             is_in_range = (now - 2592000 <= ts <= now)
                             
                         if not is_in_range:
@@ -60,7 +60,7 @@ async def load_sessions(request: Request):
             result["data"] = filtered_data
             print(f"Loaded {len(data)} sessions, {len(filtered_data)} after filtering.")
             
-            return templates.TemplateResponse(request=request, name="session/sessions.html", context={"result": result})
+            return templates.TemplateResponse(request=request, name="session/sessions.html", context={"result": result, "filter_text": filter_text, "filter_date": filter_date})
         except Exception as e:
             logger.error(f"Unexpected error in load_sessions: {str(e)}", exc_info=True)
             return templates.TemplateResponse(request=request, name="session/sessions.html", context={"result": {"data": [], "has_more": False}})
