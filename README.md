@@ -12,7 +12,9 @@ Maia agit comme un pont entre les utilisateurs et le cœur du système Hermes. G
 |- **Envoi de messages** : Interface simplifiée pour communiquer avec les agents.
 |- **Exécution de commandes** : Contrôle et exécution de commandes via l'API Gateway de Hermes.
 |- **Interface Web** : Une expérience utilisateur fluide et centralisée.
-|- **Support STT (Whisper)** : Intégration de la reconnaissance vocale haute performance.
+||- **Support STT (Whisper)** : Intégration de la reconnaissance vocale haute performance.
+||- **Support TTS (Text-to-Speech)** : Conversion de la réponse textuelle en voix.
+
 |- **Filtres avancés** : Recherche par texte, date et pagination pour les sessions et l'historique.
 
 ## 🛠 Technologies utilisées
