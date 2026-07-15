@@ -13,3 +13,4 @@ logs/*.log
 .pytest_cache/
 .venv/
 .dockerignore
+static/wav/*.wav

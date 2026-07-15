@@ -1,8 +1,17 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from maia.voice.service import transcribe_audio
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
+from maia.voice.service_stt import transcribe_audio
+from maia.voice.service_tts import generate_audio
+from maia.logging_config import logger
+import emoji
 import shutil
 import os
 import uuid
+import re
+
+#Where wav files are generated: 
+#TODO: clean this dir sometimes
+OUTPUT_DIR = "static/wav"
 
 router = APIRouter(prefix="/v1/voice", tags=["voice"])
 
@@ -34,3 +43,31 @@ async def transcribe(file: UploadFile = File(...)):
         # Clean up the temporary file
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+@router.get("/generate")
+async def generate(request: Request):
+    message_id = request.query_params.get("message_id")
+    text = request.query_params.get("text")
+
+    #Remove emojis
+    text = emoji.replace_emoji(text, replace='')
+
+    #Replace file names with explicit "point" in french (and other few things)
+    ext = {'.js': ' point JS', '.py': ' point pi', '.md': ' point MD',
+            '.toml': ' point TOML',
+            'TODO': 'tout doux', ' & ': ' et ', ' :': ',',
+            'backend': 'back-end', 'frontend': 'front-end', 
+            'À': 'à'}
+    for search, replaced in ext.items():
+        text = re.sub(re.escape(search), replaced, text, flags=re.IGNORECASE)
+
+    #Test:
+    #text = text.replace('Intelligence', "intelligence.")
+
+    output_file = f"{OUTPUT_DIR}/{message_id}"
+
+    return StreamingResponse(
+        generate_audio(text, output_file),
+        media_type="text/event-stream",
+    )

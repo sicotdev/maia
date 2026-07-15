@@ -39,7 +39,7 @@ function onChatStreamDelta(rawAnswer, cleanAnswer) {
         parseMd(cleanAnswer, rawAnswer.textContent);
 }
 
-function onChatStreamEnd(message) {
+function onChatStreamEnd(message, tmp_id) {
 
     //Make sure the function is called once (solve bug when the chat is cleared)
     if (message.dataset.streamEnded) return;
@@ -60,19 +60,28 @@ function onChatStreamEnd(message) {
     //Regroup tool calls
     const toolContainer = message.querySelector('.tools-container');
     const toolElems = [...toolContainer.childNodes]; //Convert to array to avoid a dynamic child list
-    if (toolElems.length == 0)
-        return;
-    
-    const stepContainer = document.createElement("details");
-    stepContainer.className = "tool-steps";
-    
-    const summary = document.createElement("summary");
-    summary.textContent = `tool calls (${toolElems.length})`;
-    
-    stepContainer.appendChild(summary);
-    toolElems.forEach((toolElem) => stepContainer.appendChild(toolElem));
-    
-    toolContainer.appendChild(stepContainer);
+    if (toolElems.length > 0) {
+
+        const stepContainer = document.createElement("details");
+        stepContainer.className = "tool-steps";
+        
+        const summary = document.createElement("summary");
+        summary.textContent = `tool calls (${toolElems.length})`;
+        
+        stepContainer.appendChild(summary);
+        toolElems.forEach((toolElem) => stepContainer.appendChild(toolElem));
+        
+        toolContainer.appendChild(stepContainer);
+    }
+
+    //Update message id
+    const input = message.querySelector('#real_message_id');
+    const messageId = input.value; 
+    document.getElementById(`message-text-${tmp_id}`).id = `message-text-${messageId}`;
+    input.remove();
+
+    //Show audio play
+    message.querySelector(".audio-container").classList.add("visible");
 }
 
 

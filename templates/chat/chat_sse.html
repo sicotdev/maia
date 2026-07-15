@@ -9,8 +9,11 @@
 {# ai stream response (identical to chat_message.html but with sse event listeners ) #}
 <div
     class="message role-assistant"
-    hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" hx-on:htmx:sse-close="onChatStreamEnd(this)"
+    hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" 
+    hx-on:htmx:sse-close="onChatStreamEnd(this, '{{ tmp_id }}')"
     >
+
+    <input type="hidden" id="real_message_id" sse-swap="message_id" hx-swap="outerHTML">
 
     <div class="message-header" sse-swap="timestamp" hx-on::after-swap="formatTimestamps(this)"></div>
 
@@ -20,18 +23,20 @@
 
     {# Hidden div with the raw text before marked parsing and DOMPurify sanitization #}
     <div class="answer-raw"
-        sse-swap="text_delta"
+        sse-swap="text_delta,answer_error"
         hx-swap="beforeend"
         style="display:none"
-        hx-on::after-swap="onChatStreamDelta(this, document.getElementById('message-text-{{ message_id }}').firstElementChild)"
+        hx-on::after-swap="onChatStreamDelta(this, document.getElementById('message-text-{{ tmp_id }}').firstElementChild)"
     ></div>
+    
     {# Displayed answer #}
-    <div id="message-text-{{ message_id }}" class="message-text">
+    <div id="message-text-{{ tmp_id }}" class="message-text">
         <div class="clean_answer_delta"></div>
         <span class="custom-spinner" sse-swap="first_event" hx-swap="outerHTML"><img src="{{ thinking_gif }}"></span>
     </div>
     
-    <div sse-swap="answer_error" hx-swap="beforeend" hx-target="#message-text-{{ message_id }}"></div>
+    {# Audio #}
+    <div class="audio-container" sse-swap="audio"></div>
 </div>
 
 {# new-session hidden value #}

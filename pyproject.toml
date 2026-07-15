@@ -18,6 +18,8 @@ dependencies = [
     "librosa>=0.11.0",
     "soundfile>=0.14.0",
     "torch>=2.13.0",
+    "pocket-tts>=2.1.0",
+    "emoji>=2.15.0",
 ]
 
 [project.scripts]

@@ -39,7 +39,7 @@ async def create_session() -> str:
         )
         resp.raise_for_status()
         data = resp.json()
-        
+
         return data["session"]
 
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
@@ -66,14 +66,18 @@ async def chat_start(request: Request):
 
     print(f"session_id is {session_id}")
 
+    #Generate a unique message id
+    message_id = uuid.uuid4().hex
+
     qs = urlencode({"message": user_message, "session_id": session_id })
     sse_url = f"/chat/stream?{qs}"
-
+    
     return templates.TemplateResponse(request=request, name="chat/chat_sse.html", context={
         "sse_url": sse_url, 
         "msg": { "role": "user", "timestamp": time.time(), "content": escape(user_message) },
-        "hx_swap": hx_swap, "session": session, "message_id": uuid.uuid4().hex,
-        "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, 11)}.gif"
+        "hx_swap": hx_swap, "session": session,
+        "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, 11)}.gif",
+        "tmp_id": message_id
     })
 
 # Step 2: opened by EventSource (GET only).
@@ -116,6 +120,7 @@ async def chat_stream(request: Request):
                     current_event = None
                     tool_index = 0
                     started = False
+                    message_id = 0
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
@@ -145,6 +150,7 @@ async def chat_stream(request: Request):
                             #Started received
                             print("stream started")
                             started = True
+                            print(event_data);
                             continue
 
                         #Send first_event after message.started received
@@ -183,6 +189,10 @@ async def chat_stream(request: Request):
                             delta = event_data.get("delta", "")
                             if delta:
                                 yield _sse("text_delta", escape(delta))
+
+                        elif current_event == "assistant.completed":
+                            #store the timestamp as id
+                            message_id = int(event_data.get("ts"))
 
                         elif current_event == "run.completed":
                             timestamp = event_data.get('ts')
@@ -228,6 +238,18 @@ async def chat_stream(request: Request):
                             print("stream done")
                             break
 
+                    #yield real message_id
+                    yield _sse("message_id", f"<input type='hidden' id='real_message_id' value='{message_id}'>")
+
+                    #yield audio container with message_id
+                    yield _sse(
+                        "audio",
+                        templates.get_template("chat/parts/chat_audio.html").render({
+                            "msg": { "id": message_id }
+                        })
+                    )
+
+                    #DONE
                     yield _sse(
                         "done",
                         "",
@@ -390,10 +412,11 @@ async def get_chat_session(request: Request, session_id: str):
                     if last_ai_message is not None:
                         messages.append(last_ai_message)
                         last_ai_message = None
-                    messages.append({"role": "user", "content": escape(msg.get("content")), "timestamp": msg.get("timestamp")})
+                    messages.append({"id": int(msg.get("timestamp")), "role": "user", "content": escape(msg.get("content")), "timestamp": msg.get("timestamp")})
                 elif msg.get("role") == "assistant":
                     if last_ai_message is None:
                         last_ai_message = {
+                            "id": int(msg.get("timestamp")),
                             "role": "assistant",
                             "reasoning": escape(msg.get("reasoning")),
                             "content": escape(msg.get("content")),

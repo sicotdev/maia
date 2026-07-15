@@ -116,3 +116,63 @@ function initSTT() {
         }
     }
 }
+
+
+//TTS streamed from backend
+const queue = [];
+let playing = false;
+
+function enqueueAudio(url) {
+    queue.push(url);
+    if (!playing) playNext();
+}
+
+function playNext() {
+    if (queue.length === 0) { playing = false; return; }
+    playing = true;
+    const url = queue.shift();
+    const audio = new Audio(url);
+    audio.play();
+    audio.onended = playNext;
+}
+
+function startAudioGeneration(button, messageId) {
+    if (playing) return;
+
+    button.disabled = true;
+    button.innerHTML = "<span class='spinner'></span>";
+
+    const text = document.getElementById(`message-text-${messageId}`).innerText;
+
+    const url = `/v1/voice/generate?message_id=${messageId}&text=${encodeURIComponent(text)}`;
+    const evtSource = new EventSource(url);
+
+    let chunkReceived = false;
+    evtSource.addEventListener('chunk', (event) => {
+        chunkReceived = true;
+        enqueueAudio(event.data);
+    });
+
+    evtSource.addEventListener('done', () => {
+        const finalAudioUrl = event.data;
+        const autoplay = !chunkReceived; // meaning we already have the final wav
+        button.remove();
+        showFinalAudioPlayer(messageId, finalAudioUrl, autoplay);
+        evtSource.close();
+    });
+
+    evtSource.onerror = (err) => {
+        console.error('SSE error:', err);
+        evtSource.close();
+    };
+
+    return evtSource;
+}
+
+function showFinalAudioPlayer(messageId, url, autoplay = false) {
+    const audio = document.getElementById(`audio-player-${messageId}`);
+    audio.setAttribute('src', url);
+    audio.classList.add('visible');
+    if (autoplay)
+        audio.play();
+}

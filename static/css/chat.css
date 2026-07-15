@@ -113,6 +113,21 @@ details .details-body {
     overflow-y: auto;
 }
 
+/* ---- Audio generation ---- */
+.audio-container { 
+    display: flex;
+    visibility: hidden;
+}
+.audio-container audio {
+    visibility: hidden;
+}
+.audio-container.visible {
+    visibility: visible;
+}
+.audio-container audio.visible {
+    visibility: visible;
+}
+
 
 /* ---- Form ---- */
 .input-area {
@@ -139,5 +154,5 @@ details .details-body {
 }
 
 .custom-spinner img {
-    height: 50px;
+    height: 100px;
 }

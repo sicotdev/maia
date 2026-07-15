@@ -1,4 +1,5 @@
 <div class="message role-{{ msg.role }}">
+
     <div class="message-header">
         {% if msg.timestamp %}<span class="timestamp">{{ msg.timestamp }}</span>{% endif %}
     </div>
@@ -23,6 +24,17 @@
     </div>
 
     {# ---- main text content ---- #}
-    <div class="message-text">{{ msg.content }}</div>
+    <div 
+        {% if msg.role == "assistant" %}
+        id="message-text-{{ msg.id }}"
+        {% endif %}
+        class="message-text">{{ msg.content }}</div>
+
+    {# Audio #}
+    {% if msg.role == "assistant" %}
+    <div class="audio-container visible">
+        {% include "chat/parts/chat_audio.html" %}
+    </div>
+    {% endif %}
 
 </div>
