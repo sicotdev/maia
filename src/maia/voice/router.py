@@ -56,9 +56,10 @@ async def generate(request: Request):
     #Replace file names with explicit "point" in french (and other few things)
     ext = {'.js': ' point JS', '.py': ' point pi', '.md': ' point MD',
             '.toml': ' point TOML',
-            'TODO': 'tout doux', ' & ': ' et ', ' :': ',',
+            'TODO': 'tout doux', 'README': 'readme',
+            ' & ': ' et ', ' :': ',',
             'backend': 'back-end', 'frontend': 'front-end', 
-            'À': 'à'}
+            'À': 'à', '/': ', '}
     for search, replaced in ext.items():
         text = re.sub(re.escape(search), replaced, text, flags=re.IGNORECASE)
 
