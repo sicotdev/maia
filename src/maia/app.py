@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# NEEDED FOR CosyVoice
+#TODO: clean this
+BASE_DIR = Path(__file__).resolve().parents[2]
+sys.path.append(str(BASE_DIR))
+sys.path.append(str(BASE_DIR / "third_party" / "Matcha-TTS"))
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from maia.templating import templates

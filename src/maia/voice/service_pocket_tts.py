@@ -9,8 +9,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # Load model with wav file (todo: export safetensors)
-model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
+model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
+model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
 
 
 # Higher quality (more steps)
@@ -29,11 +29,14 @@ tts_model = TTSModel.load_model(
 )
 
 # Get voice state
-#voice_state = tts_model.get_state_for_audio_prompt(model_wav_path)
-voice_state = tts_model.get_state_for_audio_prompt(model_tensor_path)
-
-# Export to safetensors after loaded from wav for fast loading later
-#export_model_state(voice_state, model_tensor_path)
+if (os.path.isfile(model_tensor_path)):
+    print("Loading tensor file")
+    voice_state = tts_model.get_state_for_audio_prompt(model_tensor_path)
+else:
+    print("Loading wav file")
+    # Export to safetensors after loaded from wav for fast loading later
+    voice_state = tts_model.get_state_for_audio_prompt(model_wav_path)    
+    export_model_state(voice_state, model_tensor_path)
 
 #TODO
 # Stream generation

@@ -173,6 +173,7 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
     const audio = document.getElementById(`audio-player-${messageId}`);
     audio.setAttribute('src', url);
     audio.classList.add('visible');
+
     if (autoplay)
         audio.play();
 }
