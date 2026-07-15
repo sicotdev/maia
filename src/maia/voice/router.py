@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
 from maia.voice.service_stt import transcribe_audio
-from maia.voice.service_cosyvoice_tts import generate_audio
+#from maia.voice.service_cosyvoice_tts import generate_audio
+#from maia.voice.service_kokoro_tts import generate_audio
+from maia.voice.service_pocket_tts import generate_audio
 from maia.logging_config import logger
 import emoji
 import shutil

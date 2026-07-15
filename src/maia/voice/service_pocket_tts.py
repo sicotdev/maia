@@ -9,8 +9,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # Load model with wav file (todo: export safetensors)
-model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
+model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
+model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
 
 
 # Higher quality (more steps)
