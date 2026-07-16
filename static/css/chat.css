@@ -60,6 +60,8 @@
     background-color: var(--accent-color);
     color: #ffffff;
     border-bottom-right-radius: 4px;
+    max-height: 200px;
+    overflow: auto;
 }
 
 /* Assistant messages: left side, gray bubble */
@@ -102,6 +104,11 @@ details .details-body {
     border-top: 1px solid var(--border);
     margin-left: 10px;
     margin-bottom: 5px;
+}
+.details-body:not(.details-body .details-body){
+    word-break: break-word;
+    max-height: 200px;
+    overflow: auto;
 }
 
 /* ---- Tool calls emitted by the assistant ---- */

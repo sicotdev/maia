@@ -211,18 +211,16 @@ async def chat_stream(request: Request):
                             for item in event_data.get('messages'):
                                 msg_reasonning = item.get('reasoning')
                                 if (msg_reasonning and msg_reasonning.lstrip()):
-                                    if (reasoning == ""):
-                                        reasoning = msg_reasonning
-                                        yield _sse(
-                                            "reasoning",
-                                            templates.get_template("chat/parts/chat_reasoning.html").render({
-                                                "msg": {
-                                                    "reasoning": reasoning,
-                                                }
-                                            })
-                                        )
-                                    else:
-                                        print(f"additionnal reasonning: {msg_reasonning}")
+                                    reasoning += msg_reasonning
+                                    yield _sse(
+                                        "reasoning",
+                                        templates.get_template("chat/parts/chat_reasoning.html").render({
+                                            "msg": {
+                                                "reasoning": reasoning,
+                                            }
+                                        })
+                                    )
+                                    
                                 if (item.get('role') == "tool"):
                                     yield _sse(
                                         f"tool_call_{tool_index}",

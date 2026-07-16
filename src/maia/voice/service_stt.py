@@ -8,7 +8,7 @@ from maia.logging_config import logger
 # Load model globally to avoid reloading on every request
 # Use "base" for speed, "small" or "medium" for better accuracy
 # Device can be "cuda" (if GPU is available) or "cpu"
-MODEL_SIZE = "base"
+MODEL_SIZE = "small"
 DEVICE = "cpu" # Change to "cuda" if GPU is available
 COMPUTE_TYPE = "int8" # Use int8 for CPU to save memory and speed up
 
