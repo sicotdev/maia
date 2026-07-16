@@ -9,11 +9,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 # Load model with wav file (todo: export safetensors)
-model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
 #model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
 #model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
-
+model_wav_path = BASE_DIR / "pocket-models" / "isemerge.wav"
+model_tensor_path = BASE_DIR / "pocket-models" / "isemerge.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "moi2.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "moi2.safetensors"
 
 # Higher quality (more steps)
 #temp=0.5, lsd_decode_steps=5
@@ -27,7 +30,7 @@ model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
 
 # Load the model
 tts_model = TTSModel.load_model( 
-    language="french_24l", temp=0.9, lsd_decode_steps=5, eos_threshold=-3.0
+    language="french_24l", temp=0.5, lsd_decode_steps=5, eos_threshold=-2.0
 )
 
 # Get voice state
