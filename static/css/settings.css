@@ -1,0 +1,88 @@
+.settings-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: sans-serif;
+    color: #333;
+}
+
+.settings-container header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.settings-section {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.settings-section h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.setting-item {
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.setting-item label {
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.setting-item select, 
+.setting-item input[type="range"] {
+    width: 100%;
+    padding: 0.5rem;
+}
+
+.setting-item .checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+
+.setting-item .checkbox input {
+    width: auto;
+}
+
+.info-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.btn-save {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .settings-container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+}
