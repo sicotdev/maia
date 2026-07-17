@@ -1,24 +1,43 @@
 .settings-container {
     margin: 2rem auto;
     padding: 2rem;
-    font-family: sans-serif;
+    font-family: var(--sans);
+    background-color: var(--panel-color);
+    color: var(--text-color);
+    border: 1px solid var(--panel-border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1200px;
 }
 
 .settings-container .settings-header {
-    margin-bottom: 2rem;
-    border-bottom: 2px solid #eee;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--panel-border-color);
     padding-bottom: 1rem;
 }
 
+.settings-content {
+    display: flex;
+    gap: 2rem;
+    overflow: auto;
+    padding: 1rem;
+}
+
 .settings-section {
-    margin-bottom: 2.5rem;
+    flex: 1;
     padding: 1.5rem;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .settings-section h3 {
     margin-top: 0;
     font-size: 1.25rem;
     margin-bottom: 1.5rem;
+    color: var(--panel-accent);
 }
 
 .setting-item {
@@ -37,6 +56,10 @@
 .setting-item input[type="range"] {
     width: 100%;
     padding: 0.5rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 4px;
 }
 
 .setting-item .checkbox {
@@ -49,7 +72,28 @@
     width: auto;
 }
 
+footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-save {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-save:hover {
+    background-color: var(--accent-dim);
+}
+
 .info-text {
     font-size: 0.85rem;
     margin-top: 0.5rem;
+    color: var(--text-dim);
 }
