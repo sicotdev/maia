@@ -65,6 +65,9 @@ main {
 #panel-voice {
     display: none;
 }
+#panel-settings {
+    display: none;
+}
 
 footer {
     padding: 10px 20px;

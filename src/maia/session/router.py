@@ -7,7 +7,7 @@ from maia.templating import templates
 
 router = APIRouter()
 
-@router.get("/sessions")
+@router.get("")
 async def load_sessions(request: Request):
     
     offset = request.query_params.get("offset", 0)

@@ -16,7 +16,7 @@ import re
 #TODO: clean this dir sometimes
 OUTPUT_DIR = "static/wav"
 
-router = APIRouter(prefix="/v1/voice", tags=["voice"])
+router = APIRouter()
 
 @router.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
@@ -52,6 +52,8 @@ async def transcribe(file: UploadFile = File(...)):
 async def generate(request: Request):
     message_id = request.query_params.get("message_id")
     text = request.query_params.get("text")
+    #TODO
+    #chunk_index
 
     #Remove emojis
     text = emoji.replace_emoji(text, replace='')

@@ -1,0 +1,11 @@
+{% include "session/filters.html" %}
+
+<button id="btn-new-session" hx-on:click="sessionNewBtnClick()">Nouvelle session</button>
+
+<ul id="conversation-list">
+    <div hx-get="/sessions"
+    hx-trigger="intersect once"
+    hx-swap="outerHTML">
+        <span class="spinner"></span>
+    </div>
+</ul>

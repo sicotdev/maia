@@ -4,6 +4,7 @@ import json
 import time
 import uuid
 import random
+from html import escape
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -13,16 +14,23 @@ from maia.templating import templates
 
 router = APIRouter()
 
-
-from html import escape
-
-
 def _sse(event: str, html_fragment: str) -> str:
     # SSE does not allow raw line breaks inside a "data:" field,
     # so each HTML fragment line is prefixed with "data: ".
     lines = html_fragment.split("\n")
     payload = "\n".join(f"data: {line}" for line in lines)
     return f"event: {event}\n{payload}\n\n"
+
+def _sse_error():
+    #Make sure we're always sending the first event and done event
+    return (
+        _sse("first_event", "<span class='spinner'></span>")
+        + _sse(
+            "answer_error",
+            "<div class='error'>Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>",
+        )
+        + _sse("done", "")
+    )
 
 # Create an empty session
 async def create_session() -> str:
@@ -43,7 +51,7 @@ async def create_session() -> str:
         return data["session"]
 
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
-@router.post("/chat/start")
+@router.post("/start")
 async def chat_start(request: Request):
     
     data = await request.form()
@@ -81,7 +89,7 @@ async def chat_start(request: Request):
     })
 
 # Step 2: opened by EventSource (GET only).
-@router.get("/chat/stream")
+@router.get("/stream")
 async def chat_stream(request: Request):
     
     user_message = request.query_params.get("message")
@@ -110,11 +118,7 @@ async def chat_stream(request: Request):
                         logger.error(
                             f"Gateway HTTP Error: {response.status_code} - {body.decode(errors='replace')}"
                         )
-                        yield _sse(
-                            "answer_error",
-                            "<div class='error'>Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>",
-                        )
-                        yield _sse("done", "")
+                        yield _sse_error()
                         return
 
                     current_event = None
@@ -258,18 +262,10 @@ async def chat_stream(request: Request):
                 f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}",
                 exc_info=True,
             )
-            yield _sse(
-                "answer_error",
-                "<div class='error'>Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>",
-            )
-            yield _sse("done", "")
+            yield _sse_error()
         except Exception as e:
             logger.error(f"Unexpected error in chat_stream router: {str(e)}", exc_info=True)
-            yield _sse(
-                "answer_error",
-                "<div class='error'>Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée.</div>",
-            )
-            yield _sse("done", "")
+            yield _sse_error()
 
     return StreamingResponse(
         event_generator(),
@@ -282,7 +278,7 @@ async def chat_stream(request: Request):
 
 
 # Classic chat endpoint; returns the whole response at once.
-@router.post("/chat")
+@router.post("/response")
 async def chat(request: Request):
     data = await request.form()
     user_message = data.get("message")
@@ -383,7 +379,7 @@ async def chat(request: Request):
                 }
             )
 
-@router.get("/chat/{session_id}")
+@router.get("/{session_id}")
 async def get_chat_session(request: Request, session_id: str):
 
     print(f"Fetching chat session for session_id: {session_id}")  # Debugging line

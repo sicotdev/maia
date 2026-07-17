@@ -30,7 +30,7 @@ model_tensor_path = BASE_DIR / "pocket-models" / "isemerge.safetensors"
 
 # Load the model
 tts_model = TTSModel.load_model( 
-    language="french_24l", temp=0.5, lsd_decode_steps=5, eos_threshold=-2.0
+    language="french_24l", temp=0.5, lsd_decode_steps=5, eos_threshold=-3.0
 )
 
 # Get voice state
@@ -54,6 +54,7 @@ else:
 
 async def generate_audio(text: str, output_file: str): 
 
+#TODO: should be in router
     if (os.path.isfile(f"{output_file}.wav")):
         yield f"event: done\ndata: {output_file}.wav\n\n"
         return

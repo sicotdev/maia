@@ -35,8 +35,11 @@ function onChatSettle(container, event) {
 }
 
 function onChatStreamDelta(rawAnswer, cleanAnswer) {
-    if (rawAnswer && cleanAnswer) //Fix delta received after stream end
+    if (rawAnswer && cleanAnswer) {
         parseMd(cleanAnswer, rawAnswer.textContent);
+        //TODO: Could start to generate voice here
+        //If autoplay active
+    }
 }
 
 function onChatStreamEnd(message, tmp_id) {

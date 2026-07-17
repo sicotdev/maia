@@ -7,14 +7,14 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 sys.path.append(str(BASE_DIR))
 sys.path.append(str(BASE_DIR / "third_party" / "Matcha-TTS"))
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from maia.templating import templates
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import uvicorn
 import os
 import argparse
+
+from maia.routing import main_router
 
 # Load environment variables
 load_dotenv()
@@ -26,18 +26,8 @@ app = FastAPI(title="Maia Gateway")
 if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Include routers
-from maia.chat.router import router as chat_router
-from maia.session.router import router as session_router
-from maia.voice.router import router as voice_router
-app.include_router(chat_router)
-app.include_router(session_router)
-app.include_router(voice_router)
-
-# Serve index.html at the root path
-@app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={"DEBUG": os.getenv("DEBUG", "False") == "True"})
+# Include router
+app.include_router(main_router)
 
 
 # This is what 'uv run maia' calls

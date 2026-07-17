@@ -8,6 +8,13 @@ function formatTimestamps(container) {
     });
 }
 
+const camelToKebab = (str) => {
+  return str
+    .replace(/([A-Z])/g, '-$1')  // Add a hyphen before each uppercase letter
+    .toLowerCase()               // Convert everything to lowercase
+    .replace(/^-/, '');          // Remove the leading hyphen if the string started with an uppercase letter
+};
+
 function scrollDown(container) {
     container.scrollTop = container.scrollHeight
 }

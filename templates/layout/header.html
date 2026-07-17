@@ -1,11 +1,11 @@
 <header>
     <h1>M.A.I.A</h1>
     <nav>
-        <a class="btn-menu" onclick="showPanel('chat')">Messages textes</a> 
+        <a class="btn-menu" hx-on:click="showPanel('chat')">Messages textes</a> 
         <span>-</span>
-        <a class="btn-menu" onclick="showPanel('voice')">Appel vocal</a>
+        <a class="btn-menu" hx-on:click="showPanel('voice')">Appel vocal</a>
     </nav>
     <div id="settings">
-        <button id="settings-btn">⚙️ Paramètres</button>
+        <button id="settings-btn" hx-on:click="showPanel('settings')">⚙️ Paramètres</button>
     </div>
 </header>

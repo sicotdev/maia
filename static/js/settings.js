@@ -7,10 +7,6 @@ const STORAGE_KEYS = {
     hermesProfile: 'maia_hermes_profile'
 };
 
-/**
- * Charge les réglages depuis le LocalStorage
- * @returns {Object} Les réglages sauvegardés
- */
 function loadFromLocalStorage() {
     const settings = {};
     for (const key in STORAGE_KEYS) {
@@ -28,136 +24,72 @@ function loadFromLocalStorage() {
     return settings;
 }
 
-/**
- * Remplit les éléments Select avec les données du backend
- * @param {Object} data - Le JSON reçu de /settings/data
- */
 function populateSelects(data) {
-    // Remplir les moteurs TTS
-    const engineSelect = document.getElementById('tts-engine');
-    if (engineSelect && data.engines) {
-        engineSelect.innerHTML = ''; // Clear "Chargement..."
-        data.engines.forEach(engine => {
-            const option = document.createElement('option');
-            option.value = engine.id;
-            option.textContent = engine.name;
-            engineSelect.appendChild(option);
-        });
-    }
+    fillSelect(document.getElementById('tts-engine'), data.engines);
+    fillSelect(document.getElementById('tts-voice'), data.voices);
+    fillSelect(document.getElementById('hermes-profile'), data.profiles);
+}
 
-    // Remplir les voix TTS
-    const voiceSelect = document.getElementById('tts-voice');
-    if (voiceSelect && data.voices) {
-        voiceSelect.innerHTML = ''; // Clear "Chargement..."
-        data.voices.forEach(voice => {
+function fillSelect(select, dataMap) {
+    if (select && dataMap) {
+        select.innerHTML = '';
+        dataMap.forEach(data => {
             const option = document.createElement('option');
-            option.value = voice.id;
-            option.textContent = voice.name;
-            voiceSelect.appendChild(option);
-        });
-    }
-
-    // Remplir les profils Hermès
-    const profileSelect = document.getElementById('hermes-profile');
-    if (profileSelect && data.profiles) {
-        profileSelect.innerHTML = ''; // Clear "Chargement..."
-        data.profiles.forEach(profile => {
-            const option = document.createElement('option');
-            option.value = profile.id;
-            option.textContent = profile.name;
-            profileSelect.appendChild(option);
+            option.value = data.id;
+            option.textContent = data.name;
+            select.appendChild(option);
         });
     }
 }
 
-/**
- * Applique les réglages sauvegardés sur les éléments du DOM
- * @param {Object} settings 
- */
 function applySettings(settings) {
-    // TTS Engine
-    const engineSelect = document.getElementById('tts-engine');
-    if (engineSelect && settings.ttsEngine) {
-        engineSelect.value = settings.ttsEngine;
-    }
-
-    // TTS Voice
-    const voiceSelect = document.getElementById('tts-voice');
-    if (voiceSelect && settings.ttsVoice) {
-        voiceSelect.value = settings.ttsVoice;
-    }
-
-    // TTS Speed
-    const speedInput = document.getElementById('tts-speed');
-    if (speedInput && settings.ttsSpeed !== undefined) {
-        speedInput.value = settings.ttsSpeed;
-        document.getElementById('speed-value').innerText = settings.ttsSpeed + 'x';
-    }
-
-    // TTS Volume
-    const volumeInput = document.getElementById('tts-volume');
-    if (volumeInput && settings.ttsVolume !== undefined) {
-        volumeInput.value = settings.ttsVolume;
-        document.getElementById('volume-value').innerText = settings.ttsVolume + '%';
-    }
-
-    // TTS Auto Read
-    const autoReadCheck = document.getElementById('tts-auto-read');
-    if (autoReadCheck && settings.ttsAutoRead !== undefined) {
-        autoReadCheck.checked = settings.ttsAutoRead;
-    }
-
-    // Hermes Profile
-    const profileSelect = document.getElementById('hermes-profile');
-    if (profileSelect && settings.hermesProfile) {
-        profileSelect.value = settings.hermesProfile;
-    }
-}
-
-/**
- * Sauvegarde les réglages actuels dans le LocalStorage
- */
-function saveSettings() {
-    const settings = {
-        ttsEngine: document.getElementById('tts-engine').value,
-        ttsVoice: document.getElementById('tts-voice').value,
-        ttsSpeed: document.getElementById('tts-speed').value,
-        ttsVolume: document.getElementById('tts-volume').value,
-        ttsAutoRead: document.getElementById('tts-auto-read').checked,
-        hermesProfile: document.getElementById('hermes-profile').value
-    };
 
     for (const key in STORAGE_KEYS) {
-        localStorage.setItem(STORAGE_KEYS[key], String(settings[key]));
-    }
+        if (settings[key] === undefined)
+            continue;
+        const elemId = camelToKebab(key);
+        const elem = document.getElementById(elemId);
 
-    alert('Réglages sauvegardés !');
+        if (elem.tagName === 'INPUT' && elem.type === 'checkbox')
+            elem.checked = settings[key];
+        else
+            elem.value = settings[key];
+
+        //Update range span
+        if (key === 'ttsSpeed')
+            document.getElementById(elemId + '-value').innerText = elem.value + 'x';
+        else if (key === 'ttsVolume')
+            document.getElementById(elemId + '-value').innerText = elem.value + '%';
+    }
 }
 
-// Initialisation
+function saveSettings() {
+
+    for (const key in STORAGE_KEYS) {
+        const elemId = camelToKebab(key);
+        const elem = document.getElementById(elemId);
+        const value = elem.tagName === 'INPUT' && elem.type === 'checkbox' ? elem.checked : elem.value;
+        localStorage.setItem(STORAGE_KEYS[key], String(value));
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 1. Récupérer les données du backend
-        const response = await fetch('/settings/data');
-        if (!response.ok) throw new Error('Erreur lors de la récupération des données');
+        // 1. Get data from backend
+        const response = await fetch('/settings');
+        if (!response.ok) throw new Error('Error getting settings data');
         const data = await response.json();
 
-        // 2. Remplir les listes déroulantes
+        // 2. Fill selects
         populateSelects(data);
 
-        // 3. Charger les préférences du LocalStorage
+        // 3. Load saved settings
         const savedSettings = loadFromLocalStorage();
 
-        // 4. Appliquer les préférences sur les listes maintenant peuplées
+        // 4. Apply them
         applySettings(savedSettings);
 
     } catch (error) {
         console.error('Erreur d\'initialisation des paramètres:', error);
-        // Optionnel: afficher une erreur à l'utilisateur
-    }
-
-    const saveBtn = document.getElementById('save-settings');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', saveSettings);
     }
 });

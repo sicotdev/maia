@@ -121,6 +121,10 @@ function initSTT() {
 //TTS streamed from backend
 const queue = [];
 let playing = false;
+let loading = false;
+
+const chunkTexts = [];
+let chunkIndex = 0;
 
 function enqueueAudio(url) {
     queue.push(url);
@@ -136,14 +140,35 @@ function playNext() {
     audio.onended = playNext;
 }
 
+//This is called at each text delta if auto speak is active (or with a button once otherwise)
+//TODO: no, make 2 methods
 function startAudioGeneration(button, messageId) {
     if (playing) return;
 
-    button.disabled = true;
-    button.innerHTML = "<span class='spinner'></span>";
+    //TODO: check this, startAudioGeneration will be called at each delta text
+    //if (!loading) {
+        button.disabled = true;
+        button.innerHTML = "<span class='spinner'></span>";
+        loading = true;
+    //}
 
-    const text = document.getElementById(`message-text-${messageId}`).innerText;
+    const text = getTextWithoutCode(`message-text-${messageId}`);
 
+    //Split ignoring empty chunk
+    //TODO: another method to stream audio during generation
+    /*
+    const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
+    if (chunks.length <= chunkIndex + 1) // Wait to have the beginning of the next chunk
+        return;
+    
+    const chunkToSpeak = chunks[chunkIndex];
+    chunkIndex += 1;
+    //Here we need to fetch successively
+    //not chunk/done
+*/
+
+
+    //This works for the button only
     const url = `/v1/voice/generate?message_id=${messageId}&text=${encodeURIComponent(text)}`;
     const evtSource = new EventSource(url);
 
@@ -176,4 +201,59 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
 
     if (autoplay)
         audio.play();
+}
+
+//TODO: put this elsewhere
+function isCodeOnly(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent.trim() === '';
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        return true; // comments, etc. — ignore
+    }
+    if (node.tagName === 'CODE') {
+        return true;
+    }
+
+    const children = Array.from(node.childNodes);
+    if (children.length === 0) {
+        // Empty element (e.g. <br>, <hr>, <img>) — not code, so keep it
+        return false;
+    }
+
+    return children.every(isCodeOnly);
+}
+
+function stripCode(node) {
+    Array.from(node.children).forEach(child => {
+        if (isCodeOnly(child)) {
+            if (child.tagName === 'CODE') {
+                // Lone/mixed-context code element -> unwrap, keep text
+                child.replaceWith(document.createTextNode(child.textContent));
+            } else {
+                // Container (p, li, ul, div...) that's ENTIRELY code -> drop it
+                child.remove();
+            }
+        } else {
+            // Mixed content -> recurse deeper
+            stripCode(child);
+        }
+    });
+}
+
+function getTextWithoutCode(elementId) {
+    const original = document.getElementById(elementId);
+    const clone = original.cloneNode(true);
+
+    stripCode(clone);
+
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+
+    document.body.appendChild(clone);
+    const text = clone.innerText;
+    document.body.removeChild(clone);
+
+    return text;
 }
