@@ -21,6 +21,23 @@ function scrollDown(container) {
     container.scrollTop = container.scrollHeight
 }
 
+
+
+const renderer = new marked.Renderer();
+
+function escapeHtml(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+renderer.html = (html) => {
+    const raw = html.text;
+    return `<code>${escapeHtml(raw)}</code>`;
+};
+
+marked.use({ renderer });
 function parseMd(target, textContent) {
     textContent = textContent !== undefined ? textContent : target.textContent;
 

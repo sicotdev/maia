@@ -6,6 +6,8 @@ import re
 import soundfile as sf
 import numpy as np
 import asyncio
+import shutil
+from pathlib import Path
 from pydub import AudioSegment
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
@@ -19,6 +21,10 @@ from maia.logging_config import logger
 #Where wav files are generated: 
 #TODO: clean this dir sometimes
 OUTPUT_DIR = "static/wav"
+
+#Clean tmp dir (containing wav chunks)
+if os.path.exists(f"{OUTPUT_DIR}/tmp"):
+    shutil.rmtree(f"{OUTPUT_DIR}/tmp")
 
 router = APIRouter()
 
@@ -35,6 +41,11 @@ def filter_text(text: str) -> str:
             'À': 'à', '/': ', '}
     for search, replaced in ext.items():
         text = re.sub(re.escape(search), replaced, text, flags=re.IGNORECASE)
+
+    #Replace float numbers (ex: 12.5)
+    regex = r"(\d+)\.(\d+)"
+    replacement = r"\1 point \2"
+    text = re.sub(regex, replacement, text)
 
     #Test:
     #text = text.replace('Intelligence', "intelligence.")
@@ -83,9 +94,6 @@ async def generate(
     message_id: str = Query(..., min_length=1), 
     text: str = Query(..., min_length=1)
 ):
-    
-    if not message_id or not text:
-        raise HTTPException(status_code=400, detail="Wrong parameters")
 
     text = filter_text(text)
 
@@ -98,8 +106,10 @@ async def generate(
             media_type="text/event-stream",
         )
 
+    Path(f"{OUTPUT_DIR}/tmp").mkdir(parents=True, exist_ok=True)
+
     return StreamingResponse(
-        generate_audio_stream(text, output_file, voice),
+        generate_audio_stream(text, message_id, OUTPUT_DIR, f"{OUTPUT_DIR}/tmp", voice),
         media_type="text/event-stream",
     )
 
@@ -112,7 +122,9 @@ async def generate_chunk(
     chunk_index: int = Query(..., ge=0)):
 
     text = filter_text(text)
-    output_file = f"{OUTPUT_DIR}/{message_id}_{chunk_index}.wav"
+    output_file = f"{OUTPUT_DIR}/tmp/{message_id}_{chunk_index}.wav"
+
+    Path(f"{OUTPUT_DIR}/tmp").mkdir(parents=True, exist_ok=True)
 
     await asyncio.to_thread(  
         generate_audio, text, output_file, voice
@@ -131,7 +143,7 @@ async def merge_chunks(
     message_id: str = Query(..., min_length=1), 
     chunk_length: int = Query(..., ge=1)):
 
-    chunk_files = [f"{OUTPUT_DIR}/{tmp_id}_{i}.wav" for i in range(chunk_length)]
+    chunk_files = [f"{OUTPUT_DIR}/tmp/{tmp_id}_{i}.wav" for i in range(chunk_length)]
     output_file = f"{OUTPUT_DIR}/{message_id}.wav"
 
     print(f"merging to: {output_file}")

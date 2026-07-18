@@ -20,6 +20,7 @@ DEFAULT_VOICE = 0
 # Adjust EOS threshold, smaller means finishing earlier.
 #eos-threshold=-3.0 --> cause short answers to be cut sometimes
 # adding . at the end of chunks helped, but not fixed totally
+# frames_after_eos = 2 helped too for end hallucination
 
 
 # Load the model
@@ -59,7 +60,7 @@ def generate_audio(text: str, output_file: str, voice: int = DEFAULT_VOICE):
 
 
 #Generate chunks, yield sse event
-async def generate_audio_stream(text: str, output_file: str, voice: int = DEFAULT_VOICE): 
+async def generate_audio_stream(text: str, output_name: str, output_dir: str, tmp_dir: str, voice: int = DEFAULT_VOICE): 
 
     # Split ignoring empty chunk
     chunks = [chunk.strip() for chunk in text.split('\n') if chunk.strip()]
@@ -76,14 +77,14 @@ async def generate_audio_stream(text: str, output_file: str, voice: int = DEFAUL
         print(f"Audio duration: {audio.shape[-1] / tts_model.sample_rate:.2f} seconds")
 
         audios.append(audio)
-        chunk_file = f"{output_file}_{i}.wav"
+        chunk_file = f"{tmp_dir}/{output_name}_{i}.wav"
         scipy.io.wavfile.write(chunk_file, tts_model.sample_rate, audio.numpy())
         yield f"event: chunk\ndata: {chunk_file}\n\n"
 
     # Concatenate all audio
     full_audio = torch.cat(audios, dim=0)
     await asyncio.to_thread(
-        scipy.io.wavfile.write, f"{output_file}.wav", tts_model.sample_rate, full_audio.numpy()
+        scipy.io.wavfile.write, f"{output_dir}/{output_name}.wav", tts_model.sample_rate, full_audio.numpy()
     )
 
-    yield f"event: done\ndata: {output_file}.wav\n\n"
+    yield f"event: done\ndata: {output_dir}/{output_name}.wav\n\n"
