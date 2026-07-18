@@ -11,10 +11,12 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load model with wav file (todo: export safetensors)
 #model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
 #model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
-#model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
-model_wav_path = BASE_DIR / "pocket-models" / "isemerge.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "isemerge.safetensors"
+model_wav_path = BASE_DIR / "pocket-models" / "miel2-mono.wav"
+model_tensor_path = BASE_DIR / "pocket-models" / "miel2-mono.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "isemerge-mono.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "isemerge-mono.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "isedith6-clean.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "isedith6-clean.safetensors"
 #model_wav_path = BASE_DIR / "pocket-models" / "moi2.wav"
 #model_tensor_path = BASE_DIR / "pocket-models" / "moi2.safetensors"
 
@@ -30,7 +32,7 @@ model_tensor_path = BASE_DIR / "pocket-models" / "isemerge.safetensors"
 
 # Load the model
 tts_model = TTSModel.load_model( 
-    language="french_24l", temp=0.5, lsd_decode_steps=5, eos_threshold=-3.0
+    language="french_24l", temp=0.6, lsd_decode_steps=5, eos_threshold=-3.0
 )
 
 # Get voice state
@@ -51,13 +53,17 @@ else:
     
     # Could save chunks to file or play in real-time
 
+def generate_audio(text: str, output_file: str): 
+    print(f'GENERATING {output_file}: {text}')
 
-async def generate_audio(text: str, output_file: str): 
+    audio = tts_model.generate_audio(voice_state, f"{text}. ") #add trailing .
+    
+    print(f"Generated audio shape: {audio.shape}")
+    print(f"Audio duration: {audio.shape[-1] / tts_model.sample_rate:.2f} seconds")
 
-#TODO: should be in router
-    if (os.path.isfile(f"{output_file}.wav")):
-        yield f"event: done\ndata: {output_file}.wav\n\n"
-        return
+    scipy.io.wavfile.write(output_file, tts_model.sample_rate, audio.numpy())
+
+async def generate_audio_stream(text: str, output_file: str): 
 
     # Split ignoring empty chunk
     chunks = [chunk.strip() for chunk in text.split('\n') if chunk.strip()]

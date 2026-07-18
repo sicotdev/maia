@@ -21,6 +21,8 @@ function sessionClickAfterRequest() {
         parseMd(elem);
     });
 
+    showPanel('chat');
+
     scrollDown(container);
 }
 

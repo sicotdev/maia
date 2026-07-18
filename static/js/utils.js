@@ -1,3 +1,5 @@
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function formatTimestamps(container) {
     const timestamps = container.querySelectorAll(".timestamp:not([data-converted])");
     timestamps.forEach(span => {

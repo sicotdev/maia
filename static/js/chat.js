@@ -34,11 +34,13 @@ function onChatSettle(container, event) {
     scrollDown(container);
 }
 
-function onChatStreamDelta(rawAnswer, cleanAnswer) {
+function onChatStreamDelta(rawAnswer, messageId) {
+    const cleanAnswer = document.getElementById(`message-text-${messageId}`).firstElementChild;
     if (rawAnswer && cleanAnswer) {
         parseMd(cleanAnswer, rawAnswer.textContent);
-        //TODO: Could start to generate voice here
-        //If autoplay active
+        
+        if (get_setting('ttsAutoRead'))
+            updateAutoAudioGeneration(cleanAnswer, messageId);
     }
 }
 
@@ -83,8 +85,12 @@ function onChatStreamEnd(message, tmp_id) {
     document.getElementById(`message-text-${tmp_id}`).id = `message-text-${messageId}`;
     input.remove();
 
-    //Show audio play
-    message.querySelector(".audio-container").classList.add("visible");
+    //Audio
+    const audioContainer = message.querySelector(".audio-container");
+    if (get_setting('ttsAutoRead'))
+        endAudioGeneration(audioContainer.querySelector('button'), tmp_id, messageId);
+    
+    audioContainer.classList.add("visible");
 }
 
 

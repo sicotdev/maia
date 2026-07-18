@@ -140,35 +140,98 @@ function playNext() {
     audio.onended = playNext;
 }
 
-//This is called at each text delta if auto speak is active (or with a button once otherwise)
-//TODO: no, make 2 methods
-function startAudioGeneration(button, messageId) {
-    if (playing) return;
-
-    //TODO: check this, startAudioGeneration will be called at each delta text
-    //if (!loading) {
-        button.disabled = true;
-        button.innerHTML = "<span class='spinner'></span>";
-        loading = true;
-    //}
-
-    const text = getTextWithoutCode(`message-text-${messageId}`);
+//This is called at each text delta if auto speak is active
+function updateAutoAudioGeneration(cleanAnswer, messageId) {
+    //Wait for current loading chunk
+    if (loading) return;
+    
+    const text = getTextWithoutCode(cleanAnswer);
 
     //Split ignoring empty chunk
-    //TODO: another method to stream audio during generation
-    /*
     const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
-    if (chunks.length <= chunkIndex + 1) // Wait to have the beginning of the next chunk
+
+    //Wait to have the beginning of the next chunk
+    if (chunks.length <= chunkIndex + 1) 
         return;
     
+    //Load chunk audio
+    loading = true;
     const chunkToSpeak = chunks[chunkIndex];
+    
+    requestChunk(messageId, chunkToSpeak, chunkIndex);
     chunkIndex += 1;
-    //Here we need to fetch successively
-    //not chunk/done
-*/
+}
 
+async function requestChunk(messageId, chunkToSpeak, chunkIndex) {
 
-    //This works for the button only
+    const url = `/v1/voice/generate_chunk?message_id=${messageId}&text=${chunkToSpeak}&chunk_index=${chunkIndex}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Error getting audio chunk');
+    const data = await response.json();
+    
+    enqueueAudio(data.audio);
+    loading = false;
+}
+
+function endAudioGeneration(button, tmp_id, messageId) {
+    button.remove();
+    generateAllChunks(tmp_id, messageId);
+}
+
+async function generateAllChunks(tmp_id, messageId) {
+
+    const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
+
+    //Split ignoring empty chunk
+    const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
+
+    //Wait for last chunk generation
+    const ended = await waitLoadingEnded();
+    if (!ended) {
+        console.error("Last audio generation didn't end")
+        return; // something went wrong
+    }
+    loading = true;
+
+    //Continue to generate with tmp_id
+    for (let i = chunkIndex; i < chunks.length; i++) {
+        loading = true;
+        await requestChunk(tmp_id, chunks[i], i)
+    }
+    loading = true;
+
+    //Merge chunk and update message_id
+    const url = `/v1/voice/merge_chunks?tmp_id=${tmp_id}&message_id=${messageId}&chunk_length=${chunks.length}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Error getting final audio');
+    const data = await response.json();
+
+    //Show final <audio>
+    showFinalAudioPlayer(messageId, data.audio);
+
+    //Reset for next audio generation
+    chunkIndex = 0;
+    loading = false;
+}
+
+async function waitLoadingEnded() {
+    let loopCount = 300; // we wait 30 sec max
+    let loopIndex = 0;
+    while (loading && loopIndex++ < loopCount) {
+        await sleep(100);
+    }
+    return !loading;
+}
+
+//Called manually with button if auto speak not active
+async function startAudioGeneration(button, messageId) {
+    if (button.disabled) return; // should not happen, better safe than sorry
+
+    button.disabled = true;
+    button.innerHTML = "<span class='spinner'></span>";
+
+    //Send the entire text
+    const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
     const url = `/v1/voice/generate?message_id=${messageId}&text=${encodeURIComponent(text)}`;
     const evtSource = new EventSource(url);
 
@@ -180,7 +243,7 @@ function startAudioGeneration(button, messageId) {
 
     evtSource.addEventListener('done', () => {
         const finalAudioUrl = event.data;
-        const autoplay = !chunkReceived; // meaning we already have the final wav
+        const autoplay = !chunkReceived; // meaning we already had the final wav file
         button.remove();
         showFinalAudioPlayer(messageId, finalAudioUrl, autoplay);
         evtSource.close();
@@ -241,8 +304,7 @@ function stripCode(node) {
     });
 }
 
-function getTextWithoutCode(elementId) {
-    const original = document.getElementById(elementId);
+function getTextWithoutCode(original) {
     const clone = original.cloneNode(true);
 
     stripCode(clone);

@@ -7,8 +7,14 @@ const STORAGE_KEYS = {
     hermesProfile: 'maia_hermes_profile'
 };
 
+const settings = {}
+
+function get_setting(key) {
+    return settings[key];
+}
+
 function loadFromLocalStorage() {
-    const settings = {};
+    
     for (const key in STORAGE_KEYS) {
         const value = localStorage.getItem(STORAGE_KEYS[key]);
         if (value !== null) {
@@ -21,7 +27,6 @@ function loadFromLocalStorage() {
             }
         }
     }
-    return settings;
 }
 
 function populateSelects(data) {
@@ -42,7 +47,7 @@ function fillSelect(select, dataMap) {
     }
 }
 
-function applySettings(settings) {
+function applySettings() {
 
     for (const key in STORAGE_KEYS) {
         if (settings[key] === undefined)
@@ -57,9 +62,9 @@ function applySettings(settings) {
 
         //Update range span
         if (key === 'ttsSpeed')
-            document.getElementById(elemId + '-value').innerText = elem.value + 'x';
+            elem.nextElementSibling.textContent = elem.value + 'x';
         else if (key === 'ttsVolume')
-            document.getElementById(elemId + '-value').innerText = elem.value + '%';
+            elem.nextElementSibling.textContent = elem.value + '%';
     }
 }
 
@@ -84,11 +89,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         populateSelects(data);
 
         // 3. Load saved settings
-        const savedSettings = loadFromLocalStorage();
+        loadFromLocalStorage();
 
         // 4. Apply them
-        applySettings(savedSettings);
+        applySettings();
 
+        //Bind events
+        document.getElementById('tts-speed').addEventListener("input", () => {event.target.nextElementSibling.textContent = event.target.value + 'x'})
+        document.getElementById('tts-volume').addEventListener("input", () => {event.target.nextElementSibling.textContent = event.target.value + '%'})
     } catch (error) {
         console.error('Erreur d\'initialisation des paramètres:', error);
     }

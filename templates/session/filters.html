@@ -1,12 +1,12 @@
 <div class="panel-filters">
     <div class="filter-row">
-        <input type="text" id="filter-text" name="filter-text" autocomplete="off"
+        <input type="text" id="filter-text" name="filter_text" autocomplete="off"
                         placeholder="Rechercher une session..." class="filter-input" 
                         hx-get="/sessions" 
                         hx-trigger="keyup changed delay:300ms" 
                         hx-include="#filter-text, #filter-date" 
                         hx-target="#conversation-list">
-        <select id="filter-date" name="filter-date" class="filter-select" autocomplete="off"
+        <select id="filter-date" name="filter_date" class="filter-select" autocomplete="off"
                         hx-get="/sessions" 
                         hx-trigger="change delay:300ms" 
                         hx-include="#filter-text, #filter-date" 

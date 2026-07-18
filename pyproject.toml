@@ -41,6 +41,7 @@ dependencies = [
     "x-transformers>=2.23.3",
     "coqui-tts>=0.27.5",
     "transformers<5",
+    "pydub>=0.25.1",
 ]
 
 [project.scripts]

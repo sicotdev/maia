@@ -4,7 +4,7 @@
 
 {% if result.has_more %}
     <div class="load-more"
-    hx-get="/sessions?offset={{ result.offset + result.limit }}&filter-text={{ filter_text }}&filter-date={{ filter_date }}"
+    hx-get="/sessions?offset={{ result.offset + result.limit }}&filter_text={{ filter_text }}&filter_date={{ filter_date }}"
     hx-trigger="intersect once"
     hx-swap="outerHTML">
         <span class="spinner"></span>

@@ -6,7 +6,7 @@ import uuid
 import random
 from html import escape
 from urllib.parse import urlencode
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Form, Query, Path, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from maia.gateway import GATEWAY_URL, get_gateway_headers
 from maia.logging_config import logger
@@ -50,16 +50,14 @@ async def create_session() -> str:
 
         return data["session"]
 
+
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
 @router.post("/start")
-async def chat_start(request: Request):
-    
-    data = await request.form()
-    user_message = data.get("message")
-    session_id = data.get("session_id")
-
-    if not user_message:
-        raise HTTPException(status_code=400, detail="No message provided")
+async def chat_start(
+    request: Request,
+    message: str = Form(..., min_length=1),
+    session_id: str = Form(None),
+    ):
 
     #We need to create the session
     session = None
@@ -68,7 +66,7 @@ async def chat_start(request: Request):
         hx_swap = True
         session = await create_session()
         session_id = session["id"]
-        session["preview"] = user_message
+        session["preview"] = message
         if len(session["preview"]) > 63:
             session["preview"] = session["preview"][:60] + "..."
 
@@ -77,12 +75,12 @@ async def chat_start(request: Request):
     #Generate a unique message id
     message_id = uuid.uuid4().hex
 
-    qs = urlencode({"message": user_message, "session_id": session_id })
+    qs = urlencode({"message": message, "session_id": session_id })
     sse_url = f"/chat/stream?{qs}"
     
     return templates.TemplateResponse(request=request, name="chat/chat_sse.html", context={
         "sse_url": sse_url, 
-        "msg": { "role": "user", "timestamp": time.time(), "content": escape(user_message) },
+        "msg": { "role": "user", "timestamp": time.time(), "content": escape(message) },
         "hx_swap": hx_swap, "session": session,
         "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, 11)}.gif",
         "tmp_id": message_id
@@ -90,13 +88,10 @@ async def chat_start(request: Request):
 
 # Step 2: opened by EventSource (GET only).
 @router.get("/stream")
-async def chat_stream(request: Request):
-    
-    user_message = request.query_params.get("message")
-    session_id = request.query_params.get("session_id")
-
-    if not user_message or not session_id:
-        raise HTTPException(status_code=400, detail="Invalid Parameters")
+async def chat_stream(
+    message: str = Query(..., min_length=1),
+    session_id: str = Query(..., min_length=1),
+):
 
     headers = get_gateway_headers()
 
@@ -110,7 +105,7 @@ async def chat_stream(request: Request):
                 async with client.stream(
                     "POST",
                     f"{GATEWAY_URL}/api/sessions/{session_id}/chat/stream",
-                    json={"input": user_message},
+                    json={"input": message},
                     headers=headers,
                 ) as response:
                     if response.status_code >= 400:
@@ -154,7 +149,7 @@ async def chat_stream(request: Request):
                             #Started received
                             print("stream started")
                             started = True
-                            print(event_data);
+                            #print(event_data);
                             continue
 
                         #Send first_event after message.started received
@@ -278,20 +273,17 @@ async def chat_stream(request: Request):
 
 
 # Classic chat endpoint; returns the whole response at once.
+# TODO: check this to call LMStudio directly or any openAPI compatible (we won't use it for hermes anymore)
+# I think we will need the whole context, not just previous_response_id
 @router.post("/response")
-async def chat(request: Request):
-    data = await request.form()
-    user_message = data.get("message")
-    
-    # Get the previous_response_id from the form data if it exists
-    previous_response_id = data.get("previous_response_id")
- 
-    if not user_message:
-        raise HTTPException(status_code=400, detail="No message provided")
+async def chat(
+    message: str = Form(..., min_length=1),
+    previous_response_id: str = Form(...),
+):
  
     payload = {
         "model": "hermes-llm",
-        "input": user_message,
+        "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
     }
     if previous_response_id:
@@ -380,7 +372,10 @@ async def chat(request: Request):
             )
 
 @router.get("/{session_id}")
-async def get_chat_session(request: Request, session_id: str):
+async def get_chat_session(
+    request: Request,
+    session_id: str = Path(..., min_length=1)
+):
 
     print(f"Fetching chat session for session_id: {session_id}")  # Debugging line
 
