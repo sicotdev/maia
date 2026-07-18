@@ -12,7 +12,7 @@ async def load_sessions(
     request: Request,
     gateway_url: str = Depends(get_gateway_url),
     offset: int = Query(0), 
-    filter_text: str = Query(None), 
+    filter_text: str = Query(""), 
     filter_date: str = Query('all')
 ):
     filter_date = filter_date or "all" #empty becomes 'all'

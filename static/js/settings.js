@@ -41,6 +41,9 @@ function loadFromLocalStorage() {
         else
             settings[key] = DEFAULT_VALUES[key];
     }
+
+    //Set profile cookie
+    document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
 }
 
 function populateSelects() {
@@ -84,6 +87,8 @@ function applySettings() {
 
 function saveSettings() {
 
+    const oldProfile = get_setting('hermesProfile');
+
     for (const key in STORAGE_KEYS) {
         const elemId = camelToKebab(key);
         const elem = document.getElementById(elemId);
@@ -92,7 +97,23 @@ function saveSettings() {
         settings[key] = value;
     }
 
-    //Apply audio settings
+    //Apply profile change
+    const newProfile = get_setting('hermesProfile');
+    if (oldProfile != newProfile) {
+        document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+
+        //Clear sessions immediatly
+        document.getElementById('conversation-list').innerHTML = '<span class="spinner"></span>';
+
+        //Clic new session to clear chat (call showPanel('chat') internally)
+        sessionNewBtnClick();
+
+        //Load sessions from the new profile
+        htmx.trigger('#conversation-list', 'profileChange');
+        return;
+    }
+
+    //Apply audio settings to existing audios
     document.querySelectorAll('audio').forEach((audio) => {
         audio.volume = get_setting('ttsVolume') / 100;
         audio.playbackRate = get_setting('ttsSpeed');
