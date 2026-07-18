@@ -4,10 +4,10 @@ from fastapi.responses import HTMLResponse
 
 from maia.templating import templates
 
-from maia.chat.router import router as chat_router
-from maia.session.router import router as session_router
+from maia.routers.chat_router import router as chat_router
+from maia.routers.session_router import router as session_router
+from maia.routers.settings_router import router as settings_router
 from maia.voice.router import router as voice_router
-from maia.settings.router import router as settings_router
 
 main_router = APIRouter()
 main_router.include_router(chat_router, prefix="/chat", tags=["chat"])

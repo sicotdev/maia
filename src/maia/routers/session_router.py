@@ -1,7 +1,7 @@
 import httpx2
 import time
-from fastapi import APIRouter, Query, Request
-from maia.gateway import GATEWAY_URL, get_gateway_headers
+from fastapi import APIRouter, Query, Request, Depends
+from maia.gateway import get_gateway_url, get_gateway_headers
 from maia.logging_config import logger
 from maia.templating import templates
 
@@ -10,6 +10,7 @@ router = APIRouter()
 @router.get("")
 async def load_sessions(
     request: Request,
+    gateway_url: str = Depends(get_gateway_url),
     offset: int = Query(0), 
     filter_text: str = Query(None), 
     filter_date: str = Query('all')
@@ -19,7 +20,7 @@ async def load_sessions(
     async with httpx2.AsyncClient(timeout=None) as client:
         try:
             response = await client.get(
-                f"{GATEWAY_URL}/api/sessions",
+                f"{gateway_url}/api/sessions",
                 headers=get_gateway_headers(),
                 params={"offset": offset}
             )

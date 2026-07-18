@@ -6,13 +6,13 @@ import uuid
 import random
 from html import escape
 from urllib.parse import urlencode
-from fastapi import APIRouter, HTTPException, Form, Query, Path, Request
+from fastapi import APIRouter, HTTPException, Form, Query, Path, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from maia.gateway import GATEWAY_URL, get_gateway_headers
+from maia.gateway import get_gateway_url, get_gateway_headers
 from maia.logging_config import logger
 from maia.templating import templates
 
-MAX_GIF_NUMBER = 19
+MAX_GIF_NUMBER = 17
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ def _sse_error():
     )
 
 # Create an empty session
-async def create_session() -> str:
+async def create_session(gateway_url: str) -> str:
     async with httpx2.AsyncClient(timeout=None) as client:
 
         headers = get_gateway_headers()
@@ -43,7 +43,7 @@ async def create_session() -> str:
         print(f"creating new session")
 
         resp = await client.post(
-            f"{GATEWAY_URL}/api/sessions",
+            f"{gateway_url}/api/sessions",
             headers=headers,
             json={},
         )
@@ -57,6 +57,7 @@ async def create_session() -> str:
 @router.post("/start")
 async def chat_start(
     request: Request,
+    gateway_url: str = Depends(get_gateway_url),
     message: str = Form(..., min_length=1),
     session_id: str = Form(None),
     ):
@@ -66,7 +67,7 @@ async def chat_start(
     hx_swap = False
     if not session_id:
         hx_swap = True
-        session = await create_session()
+        session = await create_session(gateway_url)
         session_id = session["id"]
         session["preview"] = message
         if len(session["preview"]) > 63:
@@ -91,6 +92,7 @@ async def chat_start(
 # Step 2: opened by EventSource (GET only).
 @router.get("/stream")
 async def chat_stream(
+    gateway_url: str = Depends(get_gateway_url),
     message: str = Query(..., min_length=1),
     session_id: str = Query(..., min_length=1),
 ):
@@ -106,7 +108,7 @@ async def chat_stream(
             async with httpx2.AsyncClient(timeout=None) as client:
                 async with client.stream(
                     "POST",
-                    f"{GATEWAY_URL}/api/sessions/{session_id}/chat/stream",
+                    f"{gateway_url}/api/sessions/{session_id}/chat/stream",
                     json={"input": message},
                     headers=headers,
                 ) as response:
@@ -376,6 +378,7 @@ async def chat(
 @router.get("/{session_id}")
 async def get_chat_session(
     request: Request,
+    gateway_url: str = Depends(get_gateway_url),
     session_id: str = Path(..., min_length=1)
 ):
 
@@ -385,7 +388,7 @@ async def get_chat_session(
         
         try:
             response = await client.get(
-                f"{GATEWAY_URL}/api/sessions/{session_id}/messages",
+                f"{gateway_url}/api/sessions/{session_id}/messages",
                 headers=get_gateway_headers()
             )
             response.raise_for_status() 

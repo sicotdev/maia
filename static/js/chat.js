@@ -7,7 +7,9 @@ function userInputBeforeRequest(event) {
     form.querySelectorAll('button, textarea').forEach(elem => elem.disabled = true);
 
     //Reset input
-    form.querySelector('#user-input').value = '';
+    const textarea = form.querySelector('#user-input');
+    textarea.value = '';
+    resizeTextarea(textarea);
 }
 
 function userInputAfterRequest(event) {
@@ -21,9 +23,6 @@ function userInputAfterRequest(event) {
     parseMd(newMessage.querySelector('.message-text'));
     formatTimestamps(newMessage);
     scrollDown(container);
-
-    //Select the session if a new one was created
-    //TODO
 }
 
 function onChatSettle(container, event) {
@@ -121,9 +120,11 @@ function initUserInput() {
     // Shift+Enter: do nothing, let the textarea insert a newline naturally
     });
     //Auto resize the textarea based on content
-    textarea.addEventListener('input', function (e) {
-        textarea.style.height = 'auto'; // reset height to recalculate
-        textarea.style.height = textarea.scrollHeight + 'px';
-    });
+    textarea.addEventListener('input', () => resizeTextarea(textarea));
 
+}
+
+function resizeTextarea(textarea) {
+    textarea.style.height = 'auto'; // reset height to recalculate
+    textarea.style.height = textarea.scrollHeight + 'px';
 }
