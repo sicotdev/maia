@@ -11,8 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent
 # Load model with wav file (todo: export safetensors)
 #model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
 #model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
-model_wav_path = BASE_DIR / "pocket-models" / "miel2-mono.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "miel2-mono.safetensors"
+model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
+model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
+#model_wav_path = BASE_DIR / "pocket-models" / "miel2-mono.wav"
+#model_tensor_path = BASE_DIR / "pocket-models" / "miel2-mono.safetensors"
 #model_wav_path = BASE_DIR / "pocket-models" / "isemerge-mono.wav"
 #model_tensor_path = BASE_DIR / "pocket-models" / "isemerge-mono.safetensors"
 #model_wav_path = BASE_DIR / "pocket-models" / "isedith6-clean.wav"
