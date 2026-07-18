@@ -122,6 +122,8 @@ function initSTT() {
 const queue = [];
 let playing = false;
 let loading = false;
+let autoRunning = false;
+let ending = false;
 
 const chunkTexts = [];
 let chunkIndex = 0;
@@ -142,24 +144,40 @@ function playNext() {
 
 //This is called at each text delta if auto speak is active
 function updateAutoAudioGeneration(cleanAnswer, messageId) {
-    //Wait for current loading chunk
-    if (loading) return;
-    
-    const text = getTextWithoutCode(cleanAnswer);
+    if (autoRunning) return;
+    autoRunning = true;
+    autoRunningLoop(cleanAnswer, messageId);
+}
 
-    //Split ignoring empty chunk
-    const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
+async function autoRunningLoop(cleanAnswer, messageId) {
 
-    //Wait to have the beginning of the next chunk
-    if (chunks.length <= chunkIndex + 1) 
-        return;
+    while(autoRunning) {
     
-    //Load chunk audio
-    loading = true;
-    const chunkToSpeak = chunks[chunkIndex];
-    
-    requestChunk(messageId, chunkToSpeak, chunkIndex);
-    chunkIndex += 1;
+        //Wait for last chunk generation
+        const ended = await waitLoadingEnded();
+        if (!ended) {
+            console.error("Last audio generation didn't end")
+            return; // something went wrong
+        }
+
+        const text = getTextWithoutCode(cleanAnswer);
+
+        //Split ignoring empty chunk
+        const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
+
+        //Wait to have the beginning of the next chunk
+        if (chunks.length <= chunkIndex + 1) {
+            await sleep(100)
+            continue;
+        }
+        
+        //Load chunk audio
+        loading = true;
+        const chunkToSpeak = chunks[chunkIndex];
+        
+        await requestChunk(messageId, chunkToSpeak, chunkIndex);
+        chunkIndex += 1;
+    }
 }
 
 async function requestChunk(messageId, chunkToSpeak, chunkIndex) {
@@ -180,6 +198,18 @@ function endAudioGeneration(button, tmp_id, messageId) {
 
 async function generateAllChunks(tmp_id, messageId) {
 
+    autoRunning = false; // stop the chunk loop
+
+    //We're still ending the previous message
+    if (ending) {
+        const endingDone = await waitLoadingEnded();
+        if (!endingDone) {
+            console.error("Last audio generation didn't end")
+            return; // something went wrong
+        }
+    }
+    ending = true;
+
     const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
 
     //Split ignoring empty chunk
@@ -193,7 +223,7 @@ async function generateAllChunks(tmp_id, messageId) {
     }
     loading = true;
 
-    //Continue to generate with tmp_id
+    //Continue to generate the remaining chunks with tmp_id
     for (let i = chunkIndex; i < chunks.length; i++) {
         loading = true;
         await requestChunk(tmp_id, chunks[i], i)
@@ -212,6 +242,7 @@ async function generateAllChunks(tmp_id, messageId) {
     //Reset for next audio generation
     chunkIndex = 0;
     loading = false;
+    ending = false;
 }
 
 async function waitLoadingEnded() {
@@ -221,6 +252,14 @@ async function waitLoadingEnded() {
         await sleep(100);
     }
     return !loading;
+}
+async function waitEnding() {
+    let loopCount = 300; // we wait 30 sec max
+    let loopIndex = 0;
+    while (ending && loopIndex++ < loopCount) {
+        await sleep(100);
+    }
+    return !ending;
 }
 
 //Called manually with button if auto speak not active
