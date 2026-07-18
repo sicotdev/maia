@@ -61,6 +61,8 @@ function initSTT() {
                     }
                     let average = sum / dataArray.length;
 
+                    //console.log(average, framesOfSilence);
+
                     if (average < SILENCE_THRESHOLD) {
                         if (recordStarted)
                             framesOfSilence++;
@@ -138,6 +140,8 @@ function playNext() {
     playing = true;
     const url = queue.shift();
     const audio = new Audio(url);
+    audio.volume = get_setting('ttsVolume') / 100;
+    audio.playbackRate = get_setting('ttsSpeed');
     audio.play();
     audio.onended = playNext;
 }
@@ -182,7 +186,9 @@ async function autoRunningLoop(cleanAnswer, messageId) {
 
 async function requestChunk(messageId, chunkToSpeak, chunkIndex) {
 
-    const url = `/v1/voice/generate_chunk?message_id=${messageId}&text=${chunkToSpeak}&chunk_index=${chunkIndex}`;
+    const qs = `engine=${get_setting('ttsEngine')}&voice=${get_setting('ttsVoice')}` 
+            + `&message_id=${messageId}&text=${encodeURIComponent(chunkToSpeak)}&chunk_index=${chunkIndex}`
+    const url = `/v1/voice/generate_chunk?${qs}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Error getting audio chunk');
     const data = await response.json();
@@ -271,7 +277,9 @@ async function startAudioGeneration(button, messageId) {
 
     //Send the entire text
     const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
-    const url = `/v1/voice/generate?message_id=${messageId}&text=${encodeURIComponent(text)}`;
+    const qs = `engine=${get_setting('ttsEngine')}&voice=${get_setting('ttsVoice')}` 
+            + `&message_id=${messageId}&text=${encodeURIComponent(text)}`
+    const url = `/v1/voice/generate?${qs}`;
     const evtSource = new EventSource(url);
 
     let chunkReceived = false;
@@ -302,6 +310,9 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
         return;
     audio.setAttribute('src', url);
     audio.classList.add('visible');
+
+    audio.volume = get_setting('ttsVolume') / 100;
+    audio.playbackRate = get_setting('ttsSpeed');
 
     if (autoplay)
         audio.play();

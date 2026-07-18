@@ -6,8 +6,17 @@ const STORAGE_KEYS = {
     ttsAutoRead: 'maia_tts_auto_read',
     hermesProfile: 'maia_hermes_profile'
 };
+const DEFAULT_VALUES = {
+    ttsEngine: 0,
+    ttsVoice: 0,
+    ttsSpeed: 1.0,
+    ttsVolume: 80,
+    ttsAutoRead: false,
+    hermesProfile: 0
+};
+const settings = {};
 
-const settings = {}
+let settings_config = {};
 
 function get_setting(key) {
     return settings[key];
@@ -16,8 +25,9 @@ function get_setting(key) {
 function loadFromLocalStorage() {
     
     for (const key in STORAGE_KEYS) {
-        const value = localStorage.getItem(STORAGE_KEYS[key]);
+        let value = localStorage.getItem(STORAGE_KEYS[key]);
         if (value !== null) {
+
             if (key === 'ttsSpeed' || key === 'ttsVolume') {
                 settings[key] = parseFloat(value);
             } else if (key === 'ttsAutoRead') {
@@ -25,22 +35,26 @@ function loadFromLocalStorage() {
             } else {
                 settings[key] = value;
             }
+
+            console.log(key + "=" + settings[key]);
         }
+        else
+            settings[key] = DEFAULT_VALUES[key];
     }
 }
 
-function populateSelects(data) {
-    fillSelect(document.getElementById('tts-engine'), data.engines);
-    fillSelect(document.getElementById('tts-voice'), data.voices);
-    fillSelect(document.getElementById('hermes-profile'), data.profiles);
+function populateSelects() {
+    fillSelect(document.getElementById('tts-engine'), settings_config.engines);
+    fillSelect(document.getElementById('tts-voice'), settings_config.voices);
+    fillSelect(document.getElementById('hermes-profile'), settings_config.profiles);
 }
 
 function fillSelect(select, dataMap) {
     if (select && dataMap) {
         select.innerHTML = '';
-        dataMap.forEach(data => {
+        dataMap.forEach((data, index) => {
             const option = document.createElement('option');
-            option.value = data.id;
+            option.value = index;
             option.textContent = data.name;
             select.appendChild(option);
         });
@@ -75,7 +89,17 @@ function saveSettings() {
         const elem = document.getElementById(elemId);
         const value = elem.tagName === 'INPUT' && elem.type === 'checkbox' ? elem.checked : elem.value;
         localStorage.setItem(STORAGE_KEYS[key], String(value));
+        settings[key] = value;
     }
+
+    //Apply audio settings
+    document.querySelectorAll('audio').forEach((audio) => {
+        audio.volume = get_setting('ttsVolume') / 100;
+        audio.playbackRate = get_setting('ttsSpeed');
+    });
+
+    //Show chat panel to close parameters
+    showPanel('chat');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -83,10 +107,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 1. Get data from backend
         const response = await fetch('/settings');
         if (!response.ok) throw new Error('Error getting settings data');
-        const data = await response.json();
+        settings_config = await response.json();
 
         // 2. Fill selects
-        populateSelects(data);
+        populateSelects();
 
         // 3. Load saved settings
         loadFromLocalStorage();

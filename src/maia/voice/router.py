@@ -78,6 +78,8 @@ async def transcribe(file: UploadFile = File(...)):
 
 @router.get("/generate")
 async def generate(
+    engine: int = Query(..., ge=0), 
+    voice: int = Query(..., ge=0), 
     message_id: str = Query(..., min_length=1), 
     text: str = Query(..., min_length=1)
 ):
@@ -97,12 +99,14 @@ async def generate(
         )
 
     return StreamingResponse(
-        generate_audio_stream(text, output_file),
+        generate_audio_stream(text, output_file, voice),
         media_type="text/event-stream",
     )
 
 @router.get("/generate_chunk")
 async def generate_chunk(
+    engine: int = Query(..., ge=0), 
+    voice: int = Query(..., ge=0), 
     message_id: str = Query(..., min_length=1), 
     text: str = Query(..., min_length=1), 
     chunk_index: int = Query(..., ge=0)):
@@ -111,7 +115,7 @@ async def generate_chunk(
     output_file = f"{OUTPUT_DIR}/{message_id}_{chunk_index}.wav"
 
     await asyncio.to_thread(  
-        generate_audio, text, output_file
+        generate_audio, text, output_file, voice
     )
 
     normalize_audio(output_file, output_file)

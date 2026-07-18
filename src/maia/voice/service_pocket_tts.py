@@ -8,19 +8,8 @@ from pathlib import Path
 # Directory the current .py file lives in
 BASE_DIR = Path(__file__).resolve().parent
 
-# Load model with wav file (todo: export safetensors)
-#model_wav_path = BASE_DIR / "pocket-models" / "estelle.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "estelle.safetensors"
-model_wav_path = BASE_DIR / "pocket-models" / "miel.wav"
-model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
-#model_wav_path = BASE_DIR / "pocket-models" / "miel2-mono.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "miel2-mono.safetensors"
-#model_wav_path = BASE_DIR / "pocket-models" / "isemerge-mono.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "isemerge-mono.safetensors"
-#model_wav_path = BASE_DIR / "pocket-models" / "isedith6-clean.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "isedith6-clean.safetensors"
-#model_wav_path = BASE_DIR / "pocket-models" / "moi2.wav"
-#model_tensor_path = BASE_DIR / "pocket-models" / "moi2.safetensors"
+VOICES = ["estelle", "miel", "isedith"]
+DEFAULT_VOICE = 0
 
 # Higher quality (more steps)
 #temp=0.5, lsd_decode_steps=5
@@ -32,40 +21,45 @@ model_tensor_path = BASE_DIR / "pocket-models" / "miel.safetensors"
 #eos-threshold=-3.0 --> cause short answers to be cut sometimes
 # adding . at the end of chunks helped, but not fixed totally
 
+
 # Load the model
 tts_model = TTSModel.load_model( 
-    language="french_24l", temp=0.6, lsd_decode_steps=5, eos_threshold=-3.0
+    language="french_24l", temp=0.6, lsd_decode_steps=5, eos_threshold=-2.5
 )
 
-# Get voice state
-if (os.path.isfile(model_tensor_path)):
-    print("Loading tensor file")
-    voice_state = tts_model.get_state_for_audio_prompt(model_tensor_path)
-else:
-    print("Loading wav file")
-    # Export to safetensors after loaded from wav for fast loading later
-    voice_state = tts_model.get_state_for_audio_prompt(model_wav_path)    
-    export_model_state(voice_state, model_tensor_path)
+VOICES_STATES = []
+for voice in VOICES:
+    model_wav_path = BASE_DIR / "pocket-models" / f"{voice}.wav"
+    model_tensor_path = BASE_DIR / "pocket-models" / f"{voice}.safetensors"
 
-#TODO
-# Stream generation
-#for chunk in model.generate_audio_stream(voice_state, "Long text content..."):    
-    # Process each chunk as it's generated
-    #print(f"Generated chunk: {chunk.shape[0]} samples")
+    # Get voice state
+    if (os.path.isfile(model_tensor_path)):
+        print(f"Loading tensor file for {voice}")
+        voice_state = tts_model.get_state_for_audio_prompt(model_tensor_path)
+    else:
+        print(f"Loading wav file for {voice}")
+        # Export to safetensors after loaded from wav for fast loading later
+        voice_state = tts_model.get_state_for_audio_prompt(model_wav_path)    
+        export_model_state(voice_state, model_tensor_path)
     
-    # Could save chunks to file or play in real-time
+    # Store voice state
+    VOICES_STATES.append(voice_state)
 
-def generate_audio(text: str, output_file: str): 
+
+#Generate one wav file
+def generate_audio(text: str, output_file: str, voice: int = DEFAULT_VOICE): 
     print(f'GENERATING {output_file}: {text}')
 
-    audio = tts_model.generate_audio(voice_state, f"{text}. ") #add trailing .
+    audio = tts_model.generate_audio(VOICES_STATES[voice], f"{text}", frames_after_eos=2)
     
     print(f"Generated audio shape: {audio.shape}")
     print(f"Audio duration: {audio.shape[-1] / tts_model.sample_rate:.2f} seconds")
 
     scipy.io.wavfile.write(output_file, tts_model.sample_rate, audio.numpy())
 
-async def generate_audio_stream(text: str, output_file: str): 
+
+#Generate chunks, yield sse event
+async def generate_audio_stream(text: str, output_file: str, voice: int = DEFAULT_VOICE): 
 
     # Split ignoring empty chunk
     chunks = [chunk.strip() for chunk in text.split('\n') if chunk.strip()]
@@ -76,7 +70,7 @@ async def generate_audio_stream(text: str, output_file: str):
 
         # run the blocking TTS call in a thread so it doesn't block the event loop
         audio = await asyncio.to_thread(  
-            tts_model.generate_audio, voice_state, f"{chunk}." #add trailing .
+            tts_model.generate_audio, VOICES_STATES[voice], f"{chunk}", frames_after_eos=2
         )
         print(f"Generated audio shape: {audio.shape}")
         print(f"Audio duration: {audio.shape[-1] / tts_model.sample_rate:.2f} seconds")

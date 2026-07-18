@@ -2,6 +2,11 @@ function onSessionLoaded(container) {
     // Format timestamps in the session tooltip
     formatTimestamps(container);
 
+    // Make sure tooltip is removed when a session is loaded
+    const currTooltip = document.getElementById('session_tooltip');
+    if (currTooltip)
+        currTooltip.remove();
+
     // Handle tooltip visibility on hover and focus
     handleSessionTooltip(container);
 }
@@ -30,6 +35,7 @@ function sessionNewBtnClick() {
     document.getElementById('chat-container').innerHTML = '';
     document.getElementById('session_id').value = '';
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
+    showPanel('chat');
 }
 
 
@@ -37,17 +43,16 @@ function handleSessionTooltip(container) {
     const tooltip = container.querySelector('.tooltip');
     if (!tooltip) return;
 
-    // Remember where it came from so we can put it back
-    const originalParent = tooltip.parentNode;
-    const originalNextSibling = tooltip.nextSibling;
-
+    const clone = tooltip.cloneNode(true);
+    clone.id = 'session_tooltip';
+    
     // Show on mouseenter or focus
-    container.addEventListener('mouseenter', () => showSessionTooltip(container, tooltip));
-    container.addEventListener('focus', () => showSessionTooltip(container, tooltip), true); // true for capture phase
+    container.addEventListener('mouseenter', () => showSessionTooltip(container, clone));
+    container.addEventListener('focus', () => showSessionTooltip(container, clone), true); // true for capture phase
 
     // Hide on mouseleave or blur
-    container.addEventListener('mouseleave', () => hideSessionTooltip(tooltip, originalParent, originalNextSibling));
-    container.addEventListener('blur', () => hideSessionTooltip(tooltip, originalParent, originalNextSibling), true); // true for capture phase
+    container.addEventListener('mouseleave', () => hideSessionTooltip(clone));
+    container.addEventListener('blur', () => hideSessionTooltip(clone), true); // true for capture phase
 }
 
 function showSessionTooltip(container, tooltip) {
@@ -70,9 +75,6 @@ function showSessionTooltip(container, tooltip) {
     tooltip.style.opacity = '1';
 }
 
-function hideSessionTooltip(tooltip, originalParent, originalNextSibling) {
-    tooltip.style.visibility = 'hidden';
-    tooltip.style.opacity = '0';
-    // put it back in its original spot in the DOM
-    originalParent.insertBefore(tooltip, originalNextSibling);
+function hideSessionTooltip(tooltip) {
+    tooltip.remove();
 }

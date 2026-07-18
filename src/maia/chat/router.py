@@ -12,7 +12,7 @@ from maia.gateway import GATEWAY_URL, get_gateway_headers
 from maia.logging_config import logger
 from maia.templating import templates
 
-MAX_GIF_NUMBER = 27
+MAX_GIF_NUMBER = 19
 
 router = APIRouter()
 
@@ -403,22 +403,22 @@ async def get_chat_session(
                     if last_ai_message is not None:
                         messages.append(last_ai_message)
                         last_ai_message = None
-                    messages.append({"id": int(msg.get("timestamp")), "role": "user", "content": escape(msg.get("content")), "timestamp": msg.get("timestamp")})
+                    messages.append({"id": int(msg.get("timestamp")), "role": "user", "content": msg.get("content"), "timestamp": msg.get("timestamp")})
                 elif msg.get("role") == "assistant":
                     if last_ai_message is None:
                         last_ai_message = {
                             "id": int(msg.get("timestamp")),
                             "role": "assistant",
-                            "reasoning": escape(msg.get("reasoning")),
-                            "content": escape(msg.get("content")),
+                            "reasoning": msg.get("reasoning"),
+                            "content": msg.get("content"),
                             "tool_steps": [],
                             "timestamp": msg.get("timestamp")
                         }
                     else:
                         if msg.get("reasoning") and msg.get("reasoning").lstrip():
-                            last_ai_message["reasoning"] += escape(msg.get("reasoning"))
+                            last_ai_message["reasoning"] += msg.get("reasoning")
                         if msg.get("content") is not None:
-                            last_ai_message["content"] += escape(msg.get("content"))
+                            last_ai_message["content"] += msg.get("content")
                     if msg.get("tool_calls") is not None:
                         for tool_call in msg.get("tool_calls"):
                             last_ai_message["tool_steps"].append({

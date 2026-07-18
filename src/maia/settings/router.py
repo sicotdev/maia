@@ -6,23 +6,22 @@ router = APIRouter()
 
 # Données fictives - À remplacer par des requêtes DB ou appels Gateway réels
 ENGINES = [
-    {"id": "google", "name": "Google Cloud TTS"},
-    {"id": "amazon", "name": "Amazon Polly"},
-    {"id": "microsoft", "name": "Microsoft Azure TTS"},
-    {"id": "elevenlabs", "name": "ElevenLabs"},
+    {"id": "pocket_tts", "name": "Kyutai Pocket TTS"},
+    {"id": "kokoro_tts", "name": "Kokoro TTS"},
+    {"id": "coqui_x_tts", "name": "Coqui X-TTS"},
+    {"id": "cosyvoice_tts", "name": "CosyVoice"},
 ]
 
 VOICES = [
-    {"id": "voice_1", "name": "Google Française (Feminine)"},
-    {"id": "voice_2", "name": "Google Française (Masculine)"},
-    {"id": "voice_3", "name": "Microsoft Valérie"},
-    {"id": "voice_4", "name": "Amazon Polly - French (Joanna)"},
+    {"id": "estelle", "name": "Estelle"},
+    {"id": "miel", "name": "Miel"},
+    {"id": "isedith", "name": "Isedith"},
 ]
 
 PROFILES = [
-    {"id": "default", "name": "Default", "port": 8645},
-    {"id": "work", "name": "Work", "port": 8646},
-    {"id": "creative", "name": "Creative", "port": 8647},
+    {"id": "default", "name": "Default", "port": 8642},
+    {"id": "assistant", "name": "Assistant", "port": 8646},
+    {"id": "friend", "name": "Friend", "port": 8647},
 ]
 
 @router.get("")
