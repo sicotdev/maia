@@ -12,6 +12,8 @@ from maia.gateway import GATEWAY_URL, get_gateway_headers
 from maia.logging_config import logger
 from maia.templating import templates
 
+MAX_GIF_NUMBER = 27
+
 router = APIRouter()
 
 def _sse(event: str, html_fragment: str) -> str:
@@ -82,7 +84,7 @@ async def chat_start(
         "sse_url": sse_url, 
         "msg": { "role": "user", "timestamp": time.time(), "content": escape(message) },
         "hx_swap": hx_swap, "session": session,
-        "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, 11)}.gif",
+        "thinking_gif": f"static/gif/thinking_funny_{random.randint(0, MAX_GIF_NUMBER)}.gif",
         "tmp_id": message_id
     })
 
