@@ -10,6 +10,7 @@ VOICES = [
     {"id": "estelle", "name": "Estelle"},
     {"id": "miel", "name": "Miel"},
     {"id": "isedith", "name": "Isedith"},
+    {"id": "kat", "name": "Katlyn"},
 ]
 
 PROFILES = [

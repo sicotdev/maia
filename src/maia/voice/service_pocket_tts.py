@@ -4,11 +4,11 @@ import scipy.io.wavfile
 import os.path
 from pocket_tts import TTSModel, export_model_state
 from pathlib import Path
+from maia.settings import VOICES
 
 # Directory the current .py file lives in
 BASE_DIR = Path(__file__).resolve().parent
 
-VOICES = ["estelle", "miel", "isedith"]
 DEFAULT_VOICE = 0
 
 # Higher quality (more steps)
@@ -30,15 +30,15 @@ tts_model = TTSModel.load_model(
 
 VOICES_STATES = []
 for voice in VOICES:
-    model_wav_path = BASE_DIR / "pocket-models" / f"{voice}.wav"
-    model_tensor_path = BASE_DIR / "pocket-models" / f"{voice}.safetensors"
+    model_wav_path = BASE_DIR / "pocket-models" / f"{voice['id']}.wav"
+    model_tensor_path = BASE_DIR / "pocket-models" / f"{voice['id']}.safetensors"
 
     # Get voice state
     if (os.path.isfile(model_tensor_path)):
-        print(f"Loading tensor file for {voice}")
+        print(f"Loading tensor file for {voice['id']}")
         voice_state = tts_model.get_state_for_audio_prompt(model_tensor_path)
     else:
-        print(f"Loading wav file for {voice}")
+        print(f"Loading wav file for {voice['id']}")
         # Export to safetensors after loaded from wav for fast loading later
         voice_state = tts_model.get_state_for_audio_prompt(model_wav_path)    
         export_model_state(voice_state, model_tensor_path)

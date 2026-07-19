@@ -42,6 +42,7 @@ dependencies = [
     "coqui-tts>=0.27.5",
     "transformers<5",
     "pydub>=0.25.1",
+    "pyloudnorm>=0.2.0",
 ]
 
 [project.scripts]

@@ -7,11 +7,13 @@ import soundfile as sf
 import numpy as np
 import asyncio
 import shutil
+import pyloudnorm as pyln
 from pathlib import Path
 from pydub import AudioSegment
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
 from maia.voice.service_stt import transcribe_audio
+#TODO: abstract parent class and inheritance
 #from maia.voice.service_cosyvoice_tts import generate_audio, generate_audio_stream
 #from maia.voice.service_kokoro_tts import generate_audio, generate_audio_stream
 from maia.voice.service_pocket_tts import generate_audio, generate_audio_stream
@@ -51,11 +53,19 @@ def filter_text(text: str) -> str:
     #text = text.replace('Intelligence', "intelligence.")
     return text
 
-def normalize_audio(input_path, output_path):
-    audio = AudioSegment.from_wav(input_path)
-    # Normalise le volume à -1.0 dB
-    normalized_audio = audio.normalize(-1.0)
-    normalized_audio.export(output_path, format="wav")
+#TODO: in TTS parent class
+def normalize_audio(input_path, output_path, target_lufs=-19.0, peak_limit=-1.0):
+    data, rate = sf.read(input_path)
+    meter = pyln.Meter(rate)
+    loudness = meter.integrated_loudness(data)
+    normalized = pyln.normalize.loudness(data, loudness, target_lufs)
+
+    peak = np.max(np.abs(normalized))
+    peak_limit_linear = 10 ** (peak_limit / 20)
+    if peak > peak_limit_linear:
+        normalized = normalized * (peak_limit_linear / peak)
+
+    sf.write(output_path, normalized, rate)
 
 @router.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
