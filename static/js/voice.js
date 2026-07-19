@@ -306,7 +306,7 @@ async function startAudioGeneration(button, messageId) {
 
 function showFinalAudioPlayer(messageId, url, autoplay = false) {
     const audio = document.getElementById(`audio-player-${messageId}`);
-    if (audio === undefined) // happens if we change session
+    if (!audio) // happens if we change session
         return;
     audio.setAttribute('src', url);
     audio.classList.add('visible');

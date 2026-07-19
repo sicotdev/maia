@@ -17,6 +17,8 @@ async def load_sessions(
 ):
     filter_date = filter_date or "all" #empty becomes 'all'
 
+    print(f"Loading sessions from {gateway_url}")
+
     async with httpx2.AsyncClient(timeout=None) as client:
         try:
             response = await client.get(
