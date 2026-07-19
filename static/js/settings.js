@@ -10,7 +10,7 @@ const DEFAULT_VALUES = {
     ttsEngine: 0,
     ttsVoice: 0,
     ttsSpeed: 1.0,
-    ttsVolume: 80,
+    ttsVolume: 100,
     ttsAutoRead: false,
     hermesProfile: 0
 };
