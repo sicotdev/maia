@@ -1,7 +1,6 @@
 import asyncio
 import torch
 import torchaudio
-from pathlib import Path
 from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 from maia.config.logging_config import logger

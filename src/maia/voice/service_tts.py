@@ -3,6 +3,7 @@ import soundfile as sf
 import numpy as np
 import re
 
+from maia.voice.classes.tts_engine import TTSEngine
 from maia.voice.classes.pocket_tts import PocketTTS
 from maia.voice.classes.kokoro_tts import KokoroTTS
 from maia.voice.classes.kyutai_tts import KyutaiTTS

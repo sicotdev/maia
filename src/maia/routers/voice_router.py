@@ -3,14 +3,12 @@ import os
 import uuid
 import asyncio
 from pathlib import Path
-from pydub import AudioSegment
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
 
 from maia.voice.service_stt import transcribe_audio
 from maia.voice.service_tts import generate_audio, merge_audio, generate_audio_stream
 
-from maia.config.logging_config import logger
 
 FORCE_RELOAD_WAV = os.getenv("DEBUG") or False
 

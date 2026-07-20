@@ -1,11 +1,8 @@
-import os
 
 #path to cache hub file to avoir redownloading
 #os.environ["HF_HUB_CACHE"] = r"C:\path\to\copied\hub"   # or wherever you put it
 #os.environ["HF_HUB_OFFLINE"] = "1"
 
-import queue
-import threading
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +12,6 @@ import torch._dynamo
 torch._dynamo.config.disable = True
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from moshi.models.loaders import CheckpointInfo
 from moshi.models.tts import TTSModel
 from pydantic import BaseModel

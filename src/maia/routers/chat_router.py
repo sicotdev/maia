@@ -1,4 +1,3 @@
-import os
 import httpx2
 import json
 import time
@@ -6,7 +5,7 @@ import uuid
 import random
 from html import escape
 from urllib.parse import urlencode
-from fastapi import APIRouter, HTTPException, Form, Query, Path, Request, Depends
+from fastapi import APIRouter, Form, Query, Path, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from maia.config.gateway import get_gateway_url, get_gateway_headers
 from maia.config.logging_config import logger
@@ -40,7 +39,7 @@ async def create_session(gateway_url: str) -> str:
 
         headers = get_gateway_headers()
 
-        print(f"creating new session")
+        print("creating new session")
         print(f"{gateway_url}")
 
         resp = await client.post(

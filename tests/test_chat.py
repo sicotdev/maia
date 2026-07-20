@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from maia.app import app
 import os
-from unittest.mock import patch, Mock, AsyncMock
+from unittest.mock import patch, Mock
 
 client = TestClient(app)
 

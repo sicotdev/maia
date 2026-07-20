@@ -1,5 +1,3 @@
-import os
-import torch
 from fastapi import HTTPException
 from faster_whisper import WhisperModel
 from maia.config.logging_config import logger

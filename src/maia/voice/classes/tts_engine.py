@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-import time
 import torch
 import soundfile as sf
 import numpy as np
@@ -21,6 +20,13 @@ class TTSEngine(ABC):
     def normalize_audio(input_path: str, output_path: str, target_lufs: float=-19.0, peak_limit: float=-1.0, max_gain_db: float = 20.0):
         data, rate = sf.read(input_path)
         meter = pyln.Meter(rate)
+
+        min_duration_s = meter.block_size  # 0.4s by default
+        duration_s = len(data) / rate
+        if duration_s < min_duration_s:
+            print("normalize_audio: Input is too short; skipping normalization")
+            return False
+
         loudness = meter.integrated_loudness(data)
 
         if not np.isfinite(loudness):

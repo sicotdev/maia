@@ -1,4 +1,3 @@
-import os
 import httpx2
 import numpy as np
 import soundfile as sf

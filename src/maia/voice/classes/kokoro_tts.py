@@ -1,7 +1,6 @@
 import soundfile as sf
 import asyncio
 import torch
-import os.path
 from kokoro import KPipeline
 from maia.voice.classes.tts_engine import TTSEngine
 

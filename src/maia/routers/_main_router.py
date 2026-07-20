@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, APIRouter, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 
 from maia.config.templating import templates
