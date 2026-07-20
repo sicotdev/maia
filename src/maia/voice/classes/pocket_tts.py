@@ -74,20 +74,24 @@ class PocketTTS(TTSEngine):
             #check for epic fail
             if TTSEngine.is_epic_fail(audio):
                 if not retry:
-                    printf('NOISE DETECTED')
+                    print('NOISE DETECTED')
                     retry = True
                     continue # retry once
                 else:
-                    printf('NOISE DETECTED A SECOND TIME')
+                    print('NOISE DETECTED A SECOND TIME')
                     audio = torch.zeros_like(audio)
 
             audios.append(audio)
             chunk_file = f"{tmp_dir}/{output_name}_{i}.wav"
             
+            res = await asyncio.to_thread(self._write_wav, chunk_file, audio, self.tts_model.sample_rate)
+            if not res and not retry:
+                print('ERROR DETECTED')
+                retry = True
+                continue # retry once
+
             retry = False
             i += 1
-          
-            await asyncio.to_thread(self._write_wav, chunk_file, audio, self.tts_model.sample_rate)
 
             yield f"event: chunk\ndata: {chunk_file}\n\n"
 
@@ -103,4 +107,4 @@ class PocketTTS(TTSEngine):
     @staticmethod
     def _write_wav(file: str, audio: torch.Tensor, samplerate: int) -> None:
         sf.write(file, audio, samplerate)
-        TTSEngine.normalize_audio(file, file)
+        return TTSEngine.normalize_audio(file, file)

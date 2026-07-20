@@ -25,12 +25,12 @@ class TTSEngine(ABC):
 
         if not np.isfinite(loudness):
             print("normalize_audio: Input is silent or invalid; skipping normalization")
-            return
+            return False
         
         gain_db = target_lufs - loudness
         if gain_db > max_gain_db:
             print(f"normalize_audio: Gain {gain_db:.1f} dB exceeds max_gain_db; likely broken input")
-            return
+            return False
 
         normalized = pyln.normalize.loudness(data, loudness, target_lufs)
 
@@ -40,6 +40,7 @@ class TTSEngine(ABC):
             normalized = normalized * (peak_limit_linear / peak)
 
         sf.write(output_path, normalized, rate)
+        return True
 
     def is_epic_fail(audio: torch.Tensor):
         
