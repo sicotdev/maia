@@ -1,3 +1,4 @@
+import os
 import emoji
 import soundfile as sf
 import numpy as np
@@ -9,12 +10,11 @@ from maia.voice.classes.kokoro_tts import KokoroTTS
 from maia.voice.classes.kyutai_tts import KyutaiTTS
 from maia.voice.classes.coqui_x_tts import CoquiXTTS
 from maia.voice.classes.mock_tts import MockTTS
-import os
 
 # Load models conditionally to save memory on local development
-use_mock = os.getenv("MAIA_MOCK_TTS", "false").lower() == "true"
+use_mock = os.getenv("MAIA_MOCK_STT_AND_TTS", "0") == "1"
 
-if use_mock:
+if use_mock:  # one mock for each TTS engine
     tts_engines = [MockTTS(), MockTTS(), MockTTS(), MockTTS()]
 else:
     tts_engines = [
@@ -23,7 +23,6 @@ else:
         CoquiXTTS(),
         KokoroTTS(),
     ]
-
 
 
 def filter_text(text: str) -> str:
