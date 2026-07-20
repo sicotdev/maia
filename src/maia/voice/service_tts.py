@@ -8,13 +8,22 @@ from maia.voice.classes.pocket_tts import PocketTTS
 from maia.voice.classes.kokoro_tts import KokoroTTS
 from maia.voice.classes.kyutai_tts import KyutaiTTS
 from maia.voice.classes.coqui_x_tts import CoquiXTTS
+from maia.voice.classes.mock_tts import MockTTS
+import os
 
-tts_engines = [
-    PocketTTS(),
-    KyutaiTTS(),
-    CoquiXTTS(),
-    KokoroTTS(),
-]
+# Load models conditionally to save memory on local development
+use_mock = os.getenv("MAIA_MOCK_TTS", "false").lower() == "true"
+
+if use_mock:
+    tts_engines = [MockTTS(), MockTTS(), MockTTS(), MockTTS()]
+else:
+    tts_engines = [
+        PocketTTS(),
+        KyutaiTTS(),
+        CoquiXTTS(),
+        KokoroTTS(),
+    ]
+
 
 
 def filter_text(text: str) -> str:
