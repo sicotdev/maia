@@ -1,23 +1,14 @@
-import sys
-from pathlib import Path
-
-# NEEDED FOR CosyVoice
-#TODO: clean this
-BASE_DIR = Path(__file__).resolve().parents[2]
-sys.path.append(str(BASE_DIR))
-sys.path.append(str(BASE_DIR / "third_party" / "Matcha-TTS"))
-
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+# Load environment variables
 from dotenv import load_dotenv
+load_dotenv()
+
 import uvicorn
 import os
 import argparse
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from maia.routers._main_router import main_router
 
-from maia.routing import main_router
-
-# Load environment variables
-load_dotenv()
 
 # Launch app
 app = FastAPI(title="Maia Gateway")

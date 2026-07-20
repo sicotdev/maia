@@ -8,9 +8,9 @@ from html import escape
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Form, Query, Path, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from maia.gateway import get_gateway_url, get_gateway_headers
-from maia.logging_config import logger
-from maia.templating import templates
+from maia.config.gateway import get_gateway_url, get_gateway_headers
+from maia.config.logging_config import logger
+from maia.config.templating import templates
 
 MAX_GIF_NUMBER = 17
 
@@ -41,6 +41,7 @@ async def create_session(gateway_url: str) -> str:
         headers = get_gateway_headers()
 
         print(f"creating new session")
+        print(f"{gateway_url}")
 
         resp = await client.post(
             f"{gateway_url}/api/sessions",

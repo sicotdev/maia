@@ -17,6 +17,10 @@ button:not([disabled]):hover {
     opacity: 0.8;
 }
 
+button.error {
+    background-color: var(--error-color);
+}
+
 .stt-btn {
     background-color: #4caf50;
 }

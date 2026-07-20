@@ -139,7 +139,7 @@ function playNext() {
     if (queue.length === 0) { playing = false; return; }
     playing = true;
     const url = queue.shift();
-    const audio = new Audio(url);
+    const audio = new Audio(`${url}${DEBUG?'?t='+Date.now():''}`);
     audio.volume = get_setting('ttsVolume') / 100;
     audio.playbackRate = get_setting('ttsSpeed');
     audio.play();
@@ -221,6 +221,12 @@ async function generateAllChunks(tmp_id, messageId) {
     //Split ignoring empty chunk
     const chunks = text.split('\n').map(chunk => chunk.trim()).filter(chunk => chunk);
 
+    //Empty text
+    if (chunks.length == 0) {
+        ending = false;
+        return;
+    }
+
     //Wait for last chunk generation
     const ended = await waitLoadingEnded();
     if (!ended) {
@@ -235,7 +241,7 @@ async function generateAllChunks(tmp_id, messageId) {
         await requestChunk(tmp_id, chunks[i], i)
     }
     loading = true;
-
+    
     //Merge chunk and update message_id
     const url = `/v1/voice/merge_chunks?tmp_id=${tmp_id}&message_id=${messageId}&chunk_length=${chunks.length}`;
     const response = await fetch(url);
@@ -274,6 +280,7 @@ async function startAudioGeneration(button, messageId) {
 
     button.disabled = true;
     button.innerHTML = "<span class='spinner'></span>";
+    button.classList.remove('error');
 
     //Send the entire text
     const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
@@ -299,6 +306,9 @@ async function startAudioGeneration(button, messageId) {
     evtSource.onerror = (err) => {
         console.error('SSE error:', err);
         evtSource.close();
+        button.disabled = false;
+        button.innerHTML = "Error: Réessayer";
+        button.classList.add('error');
     };
 
     return evtSource;
@@ -308,7 +318,8 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
     const audio = document.getElementById(`audio-player-${messageId}`);
     if (!audio) // happens if we change session
         return;
-    audio.setAttribute('src', url);
+
+    audio.setAttribute('src', `${url}${DEBUG?'?t='+Date.now():''}`);
     audio.classList.add('visible');
 
     audio.volume = get_setting('ttsVolume') / 100;

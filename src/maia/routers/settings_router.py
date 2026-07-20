@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from maia.settings import SETTINGS
+from maia.config.settings import SETTINGS
 
 router = APIRouter()
 

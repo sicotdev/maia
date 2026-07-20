@@ -1,9 +1,9 @@
 import httpx2
 import time
 from fastapi import APIRouter, Query, Request, Depends
-from maia.gateway import get_gateway_url, get_gateway_headers
-from maia.logging_config import logger
-from maia.templating import templates
+from maia.config.gateway import get_gateway_url, get_gateway_headers
+from maia.config.logging_config import logger
+from maia.config.templating import templates
 
 router = APIRouter()
 

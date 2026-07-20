@@ -1,0 +1,35 @@
+2026-07-20 13:18:05,405 - maia - INFO - Loading Whisper model (small) on cpu...
+2026-07-20 13:18:06,412 - maia - INFO - Model loaded successfully.
+2026-07-20 13:18:14,520 - pocket_tts.models.tts_model - INFO - Loading model from config at B:\EasyPHP-Devserver-17\eds-www\maia\.venv\Lib\site-packages\pocket_tts\config\french_24l.yaml...
+2026-07-20 13:18:14,571 - pocket_tts.conditioners.text - INFO - Loading sentencepiece tokenizer from hf://kyutai/pocket-tts-without-voice-cloning/languages/french_24l/tokenizer.model@d29db7978e464fb90cb3359ee0c69a273b9142cc
+2026-07-20 13:18:16,144 - pocket_tts.models.tts_model - INFO - Loading TTSModel weights from hf://kyutai/pocket-tts/languages/french_24l/model.safetensors@39592ff23c9ef80098bb74895d104c26275fe2c9
+2026-07-20 13:18:16,415 - root - INFO - TTS Model loaded successfully. Its size is 1344.0 MB
+2026-07-20 13:18:16,459 - maia - INFO - Loading xtts_v2 model on cpu...
+2026-07-20 13:18:27,092 - maia - INFO - Model loaded successfully.
+2026-07-20 13:18:41,677 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions?offset=0 "HTTP/1.1 200 OK"
+2026-07-20 13:18:43,491 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions/api_1784509262_06eae7e9/messages "HTTP/1.1 200 OK"
+2026-07-20 13:18:45,877 - phonemizer - WARNING - 1 utterances containing language switches on lines 2
+2026-07-20 13:18:45,877 - phonemizer - WARNING - extra phones may appear in the "fr-fr" phoneset
+2026-07-20 13:18:45,877 - phonemizer - WARNING - language switch flags have been removed (applying "remove-flags" policy)
+2026-07-20 13:20:27,333 - maia - INFO - Loading Whisper model (small) on cpu...
+2026-07-20 13:20:28,349 - maia - INFO - Model loaded successfully.
+2026-07-20 13:20:36,749 - pocket_tts.models.tts_model - INFO - Loading model from config at B:\EasyPHP-Devserver-17\eds-www\maia\.venv\Lib\site-packages\pocket_tts\config\french_24l.yaml...
+2026-07-20 13:20:36,801 - pocket_tts.conditioners.text - INFO - Loading sentencepiece tokenizer from hf://kyutai/pocket-tts-without-voice-cloning/languages/french_24l/tokenizer.model@d29db7978e464fb90cb3359ee0c69a273b9142cc
+2026-07-20 13:20:38,373 - pocket_tts.models.tts_model - INFO - Loading TTSModel weights from hf://kyutai/pocket-tts/languages/french_24l/model.safetensors@39592ff23c9ef80098bb74895d104c26275fe2c9
+2026-07-20 13:20:38,643 - root - INFO - TTS Model loaded successfully. Its size is 1344.0 MB
+2026-07-20 13:20:38,688 - maia - INFO - Loading xtts_v2 model on cpu...
+2026-07-20 13:20:49,357 - maia - INFO - Model loaded successfully.
+2026-07-20 13:21:06,028 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions?offset=0 "HTTP/1.1 200 OK"
+2026-07-20 13:21:08,993 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions/api_1784509262_06eae7e9/messages "HTTP/1.1 200 OK"
+2026-07-20 13:22:15,278 - maia - INFO - Loading Whisper model (small) on cpu...
+2026-07-20 13:22:16,277 - maia - INFO - Model loaded successfully.
+2026-07-20 13:22:39,879 - maia - INFO - Loading Whisper model (small) on cpu...
+2026-07-20 13:22:40,893 - maia - INFO - Model loaded successfully.
+2026-07-20 13:22:49,118 - pocket_tts.models.tts_model - INFO - Loading model from config at B:\EasyPHP-Devserver-17\eds-www\maia\.venv\Lib\site-packages\pocket_tts\config\french_24l.yaml...
+2026-07-20 13:22:49,168 - pocket_tts.conditioners.text - INFO - Loading sentencepiece tokenizer from hf://kyutai/pocket-tts-without-voice-cloning/languages/french_24l/tokenizer.model@d29db7978e464fb90cb3359ee0c69a273b9142cc
+2026-07-20 13:22:50,722 - pocket_tts.models.tts_model - INFO - Loading TTSModel weights from hf://kyutai/pocket-tts/languages/french_24l/model.safetensors@39592ff23c9ef80098bb74895d104c26275fe2c9
+2026-07-20 13:22:50,992 - root - INFO - TTS Model loaded successfully. Its size is 1344.0 MB
+2026-07-20 13:22:51,037 - maia - INFO - Loading xtts_v2 model on cpu...
+2026-07-20 13:23:01,807 - maia - INFO - Model loaded successfully.
+2026-07-20 13:24:29,973 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions?offset=0 "HTTP/1.1 200 OK"
+2026-07-20 13:24:31,169 - httpx2 - INFO - HTTP Request: GET http://192.168.1.11:8646/api/sessions/api_1784509262_06eae7e9/messages "HTTP/1.1 200 OK"

@@ -2,7 +2,7 @@ import os
 import torch
 from fastapi import HTTPException
 from faster_whisper import WhisperModel
-from maia.logging_config import logger
+from maia.config.logging_config import logger
 
 
 # Load model globally to avoid reloading on every request
