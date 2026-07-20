@@ -3,6 +3,7 @@ import json
 import time
 import uuid
 import random
+from typing import Any
 from html import escape
 from urllib.parse import urlencode
 from fastapi import APIRouter, Form, Query, Path, Request, Depends
@@ -37,7 +38,7 @@ def _sse_error():
 
 
 # Create an empty session
-async def create_session(gateway_url: str) -> str:
+async def create_session(gateway_url: str) -> dict[str, Any]:
     async with httpx2.AsyncClient(timeout=None) as client:
         headers = get_gateway_headers()
 
@@ -477,6 +478,8 @@ async def get_chat_session(
 
                 elif msg.get("role") == "tool":
                     # Set the output of the last tool call in the last AI message.
+                    if last_ai_message is None:
+                        raise Exception("Tool result without previous message")
                     last_ai_message["tool_steps"][-1]["output"] = msg.get("content")
                 else:
                     print(f"unknown role:{msg.get('role')}")

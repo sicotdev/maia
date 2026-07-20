@@ -33,14 +33,18 @@ def is_noise_garbage(
     # --- Spectral flatness (Wiener entropy) ---
     window = torch.hann_window(n_fft, device=wav.device)
     stft = torch.stft(
-        wav, n_fft=n_fft, hop_length=hop_length, window=window,
-        return_complex=True, center=True,
+        wav,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        window=window,
+        return_complex=True,
+        center=True,
     )
     mag = stft.abs().clamp_min(1e-10)  # (freq, frames)
 
     log_mag = torch.log(mag)
-    geo_mean = torch.exp(log_mag.mean(dim=0))   # per-frame geometric mean
-    arith_mean = mag.mean(dim=0)                # per-frame arithmetic mean
+    geo_mean = torch.exp(log_mag.mean(dim=0))  # per-frame geometric mean
+    arith_mean = mag.mean(dim=0)  # per-frame arithmetic mean
     flatness_per_frame = geo_mean / arith_mean
     flatness = flatness_per_frame.mean().item()
 
@@ -64,16 +68,16 @@ def is_noise_garbage(
     }
 
 
-def clean_or_silence(wav: torch.Tensor, sr: int, **kwargs) -> torch.Tensor:
-    """
-    Returns either the original tensor, or a zero tensor of the same
-    shape/dtype/device if classified as garbage. Also returns the
-    diagnostic dict for logging.
-    """
-    result = is_noise_garbage(wav, sr, **kwargs)
-    if result["is_garbage"]:
-        return torch.zeros_like(wav), result
-    return wav, result
+# def clean_or_silence(wav: torch.Tensor, sr: int, **kwargs) -> torch.Tensor:
+#     """
+#     Returns either the original tensor, or a zero tensor of the same
+#     shape/dtype/device if classified as garbage. Also returns the
+#     diagnostic dict for logging.
+#     """
+#     result = is_noise_garbage(wav, sr, **kwargs)
+#     if result["is_garbage"]:
+#         return torch.zeros_like(wav), result
+#     return wav, result
 
 
 if __name__ == "__main__":
@@ -85,7 +89,9 @@ if __name__ == "__main__":
 
     noise = (torch.rand(n) * 2 - 1) * 0.95
     t = torch.linspace(0, dur_s, n)
-    tone = 0.2 * torch.sin(2 * 3.14159 * 220 * t) + 0.1 * torch.sin(2 * 3.14159 * 440 * t)
+    tone = 0.2 * torch.sin(2 * 3.14159 * 220 * t) + 0.1 * torch.sin(
+        2 * 3.14159 * 440 * t
+    )
 
     for name, w in [("noise", noise), ("tone", tone)]:
         start = time.perf_counter()

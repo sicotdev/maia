@@ -1,20 +1,19 @@
-
-#path to cache hub file to avoir redownloading
-#os.environ["HF_HUB_CACHE"] = r"C:\path\to\copied\hub"   # or wherever you put it
-#os.environ["HF_HUB_OFFLINE"] = "1"
+# path to cache hub file to avoir redownloading
+# os.environ["HF_HUB_CACHE"] = r"C:\path\to\copied\hub"   # or wherever you put it
+# os.environ["HF_HUB_OFFLINE"] = "1"
 
 from pathlib import Path
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 import numpy as np
 import soundfile as sf
 import torch
 import torch._dynamo
-torch._dynamo.config.disable = True
 
-from fastapi import FastAPI
-from moshi.models.loaders import CheckpointInfo
-from moshi.models.tts import TTSModel
-from pydantic import BaseModel
+torch._dynamo.config.disable = True  # need to do that before import moshi
+from moshi.models.loaders import CheckpointInfo  # noqa: E402
+from moshi.models.tts import TTSModel  # noqa: E402
 
 app = FastAPI()
 
@@ -28,16 +27,16 @@ print("Model loaded.")
 
 # Map your integer voice IDs to Kyutai voice refs (repo names or local wav paths)
 VOICE_MAP = {
-    0: "unmute-prod-website/developpeuse-3.wav", #Estelle
+    0: "unmute-prod-website/developpeuse-3.wav",  # Estelle
     1: "cml-tts/fr/10177_10625_000134-0003_enhanced.wav",  # Corinne
-    2: "cml-tts/fr/12080_11650_000047-0001.wav",    #Nicole
-    3: "cml-tts/fr/12205_11650_000004-0002_enhanced.wav", #Natasha
-    4: "cml-tts/fr/1591_1028_000108-0004_enhanced.wav", #Chantal
-    5: "cml-tts/fr/5207_3078_000031-0002_enhanced.wav", #Pauline
-    6: "cml-tts/fr/5476_3103_000072-0001_enhanced.wav", #Clara
-    7: "cml-tts/fr/577_394_000070-0001_enhanced.wav", #Diana
+    2: "cml-tts/fr/12080_11650_000047-0001.wav",  # Nicole
+    3: "cml-tts/fr/12205_11650_000004-0002_enhanced.wav",  # Natasha
+    4: "cml-tts/fr/1591_1028_000108-0004_enhanced.wav",  # Chantal
+    5: "cml-tts/fr/5207_3078_000031-0002_enhanced.wav",  # Pauline
+    6: "cml-tts/fr/5476_3103_000072-0001_enhanced.wav",  # Clara
+    7: "cml-tts/fr/577_394_000070-0001_enhanced.wav",  # Diana
     8: "unmute-prod-website/degaulle-2.wav",
-    9: "cml-tts/fr/2114_1656_000053-0001_enhanced.wav", # Quebecois
+    9: "cml-tts/fr/2114_1656_000053-0001_enhanced.wav",  # Quebecois
 }
 
 CFG_COEF = 2.0

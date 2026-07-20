@@ -28,6 +28,9 @@ router = APIRouter()
 @router.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
     # Generate a unique filename to avoid collisions
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Missing file")
+
     file_extension = os.path.splitext(file.filename)[1]
     if not file_extension:
         file_extension = ".wav"

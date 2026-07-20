@@ -1,7 +1,3 @@
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
 import uvicorn
 import os
 import argparse
@@ -34,6 +30,7 @@ def main():
     # Run the Uvicorn server with the specified host, port, and reload option
     port = args.port
     uvicorn.run("maia.app:app", host=args.host, port=port, reload=args.reload)
+
 
 if __name__ == "__main__":
     main()

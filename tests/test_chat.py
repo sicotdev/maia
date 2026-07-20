@@ -6,14 +6,19 @@ from unittest.mock import patch, Mock
 
 client = TestClient(app)
 
+
 # Environment variable configuration for testing
 @pytest.fixture(autouse=True)
 def mock_env():
-    with patch.dict(os.environ, {
-        "HERMES_GATEWAY_URL": "http://fake-gateway.com",
-        "HERMES_GATEWAY_APIKEY": "fake-key"
-    }):
+    with patch.dict(
+        os.environ,
+        {
+            "HERMES_GATEWAY_URL": "http://fake-gateway.com",
+            "HERMES_GATEWAY_APIKEY": "fake-key",
+        },
+    ):
         yield
+
 
 @patch("maia.chat.router.httpx2.AsyncClient.post")
 def test_chat_success(mock_post):
@@ -23,9 +28,7 @@ def test_chat_success(mock_post):
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
-        "choices": [
-            {"message": {"content": "Hello! I am the Maia AI."}}
-        ]
+        "choices": [{"message": {"content": "Hello! I am the Maia AI."}}]
     }
     # The mock_post (AsyncMock) returns this mock_response
     mock_post.return_value = mock_response
@@ -37,21 +40,25 @@ def test_chat_success(mock_post):
     assert payload["content"] == "Hello! I am the Maia AI."
     assert payload["error"] is False
 
+
 @patch("maia.chat.router.httpx2.AsyncClient.post")
 def test_chat_error(mock_post):
     """Simulate a 500 error from the Hermes gateway."""
     from httpx2 import HTTPStatusError
-    
+
+    # Create a mock request
+    mock_request = Mock()
+
     # Create a regular Mock for the error response
     mock_response = Mock()
     mock_response.status_code = 500
     mock_response.text = "Internal Server Error"
-    
+
     # Simulate the raise_for_status exception
     mock_response.raise_for_status.side_effect = HTTPStatusError(
-        "Error", request=None, response=mock_response
+        "Error", request=mock_request, response=mock_response
     )
-    
+
     mock_post.return_value = mock_response
 
     response = client.post("/chat", data={"message": "Hello"})
