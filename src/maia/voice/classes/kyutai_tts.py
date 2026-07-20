@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx2
 import numpy as np
 import soundfile as sf
@@ -49,7 +51,7 @@ class KyutaiTTS(TTSEngine):
         if (len(audio_segments) > 0):
             merged = np.concatenate(audio_segments, axis=0)
             await asyncio.to_thread(
-                _write_wav, final_file, merged, samplerate=samplerate
+                self._write_wav, final_file, merged, samplerate=samplerate
             )
         
         yield f"event: done\ndata: {final_file}\n\n"
