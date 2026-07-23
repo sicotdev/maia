@@ -93,19 +93,6 @@ function onChatStreamEnd(message, tmp_id) {
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
-
-    //TMP because hx-on::oob-after-swap doesn't work
-    document.body.addEventListener('htmx:oobAfterSwap', function(evt) {
-        if (evt.detail.target.id === 'conversation-list') {
-            sessionClickBeforeRequest(evt.detail.target.querySelector('li'));
-        }
-    });
-    
-    initUserInput();
-    initSTT();
-});
-
 //Init user textarea input
 function initUserInput() {
 
@@ -128,3 +115,16 @@ function resizeTextarea(textarea) {
     textarea.style.height = 'auto'; // reset height to recalculate
     textarea.style.height = textarea.scrollHeight + 'px';
 }
+
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    //TMP because hx-on::oob-after-swap doesn't work
+    document.body.addEventListener('htmx:oobAfterSwap', function(evt) {
+        if (evt.detail.target.id === 'conversation-list') {
+            sessionClickBeforeRequest(evt.detail.target.querySelector('li'));
+        }
+    });
+    
+    initUserInput();
+});

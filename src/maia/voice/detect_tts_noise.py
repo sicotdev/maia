@@ -1,6 +1,7 @@
 """
 Torch-native noise-garbage detector for TTS output.
 Takes a waveform tensor directly -- no file I/O.
+Written by Claude Sonnet 5
 """
 
 import torch
