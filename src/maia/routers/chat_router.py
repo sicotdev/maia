@@ -8,7 +8,7 @@ from html import escape
 from urllib.parse import urlencode
 from fastapi import APIRouter, Form, Query, Path, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from maia.config.gateway import get_gateway_url, get_gateway_headers
+from maia.config.gateway import get_gateway_params
 from maia.config.logging_config import logger
 from maia.config.templating import templates
 
@@ -38,15 +38,14 @@ def _sse_error():
 
 
 # Create an empty session
-async def create_session(gateway_url: str) -> dict[str, Any]:
+async def create_session(gateway_params: dict[str, Any]) -> dict[str, Any]:
     async with httpx2.AsyncClient(timeout=None) as client:
-        headers = get_gateway_headers()
+        headers = gateway_params["headers"]
 
         print("creating new session")
-        print(f"{gateway_url}")
 
         resp = await client.post(
-            f"{gateway_url}/api/sessions",
+            f"{gateway_params['url']}/api/sessions",
             headers=headers,
             json={},
         )
@@ -60,17 +59,25 @@ async def create_session(gateway_url: str) -> dict[str, Any]:
 @router.post("/start")
 async def chat_start(
     request: Request,
-    gateway_url: str = Depends(get_gateway_url),
+    gateway_params: str = Depends(get_gateway_params),
     message: str = Form(..., min_length=1),
     session_id: str = Form(None),
+    previous_response_id: str = Form(None),
 ):
 
-    # We need to create the session
+    # Call normal v1/response
+    if gateway_params["is_custom"]:
+        return await get_response(
+            request, gateway_params, message, previous_response_id
+        )
+
     session = None
     hx_swap = False
+
+    # We need to create the session
     if not session_id:
         hx_swap = True
-        session = await create_session(gateway_url)
+        session = await create_session(gateway_params)
         session_id = session["id"]
         session["preview"] = message
         if len(session["preview"]) > 63:
@@ -105,12 +112,10 @@ async def chat_start(
 # Step 2: opened by EventSource (GET only).
 @router.get("/stream")
 async def chat_stream(
-    gateway_url: str = Depends(get_gateway_url),
+    gateway_params: str = Depends(get_gateway_params),
     message: str = Query(..., min_length=1),
     session_id: str = Query(..., min_length=1),
 ):
-
-    headers = get_gateway_headers()
 
     async def event_generator():
 
@@ -118,9 +123,9 @@ async def chat_stream(
             async with httpx2.AsyncClient(timeout=None) as client:
                 async with client.stream(
                     "POST",
-                    f"{gateway_url}/api/sessions/{session_id}/chat/stream",
+                    f"{gateway_params['url']}/api/sessions/{session_id}/chat/stream",
                     json={"input": message},
-                    headers=headers,
+                    headers=gateway_params["headers"],
                 ) as response:
                     if response.status_code >= 400:
                         body = await response.aread()
@@ -307,19 +312,21 @@ async def chat_stream(
 # Classic chat endpoint; returns the whole response at once.
 # TODO: check this to call LMStudio directly or any openAPI compatible (we won't use it for hermes anymore)
 # I think we will need the whole context, not just previous_response_id
-@router.post("/response")
-async def chat(
-    gateway_url: str = Depends(get_gateway_url),
-    message: str = Form(..., min_length=1),
-    previous_response_id: str = Form(...),
+# @router.post("/response")
+async def get_response(
+    request: Request,
+    gateway_params: dict[str, Any],
+    message: str,
+    previous_response_id: str,
 ):
 
     payload = {
         "model": "hermes-llm",
-        # "reasoning": { "effort": "low" },
-        # "instructions": "This is a phone call, keep your response short and vivid.",
+        "reasoning": {"effort": "none"},
+        "instructions": "This is a phone call, keep your response short and vivid.",
         "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
+        # "stream": True, TODO stream
     }
     if previous_response_id:
         payload["previous_response_id"] = previous_response_id
@@ -331,8 +338,8 @@ async def chat(
 
         try:
             response = await client.post(
-                f"{gateway_url}/v1/responses",
-                headers=get_gateway_headers(),
+                f"{gateway_params['url']}/v1/responses",
+                headers=gateway_params["headers"],
                 json=payload,
             )
             response.raise_for_status()
@@ -340,13 +347,11 @@ async def chat(
 
             print(f"Chat response received: {result}")  # Debugging line
 
-            # TODO: no reasoning?
-            # TODO: use stream: true
-
             output = result.get("output", [])
 
             tool_steps = []
             ai_response = ""
+            reasoning = ""
 
             for item in output:
                 item_type = item.get("type")
@@ -372,8 +377,33 @@ async def chat(
                     for content_part in item.get("content", []):
                         if content_part.get("type") == "output_text":
                             ai_response += content_part.get("text", "")
+                if item_type == "reasoning":
+                    for content_part in item.get("content", []):
+                        if content_part.get("type") == "reasoning_text":
+                            reasoning += content_part.get("text", "")
 
-            # TODO: return HTML using the same template.
+            return templates.TemplateResponse(
+                request=request,
+                name="chat/chat_messages.html",
+                context={
+                    "previous_response_id": result.get("id"),
+                    "messages": [
+                        {
+                            "role": "user",
+                            "timestamp": time.time(),
+                            "content": escape(message),
+                        },
+                        {
+                            "id": result.get("completed_at"),
+                            "role": "assistant",
+                            "timestamp": result.get("completed_at"),
+                            "reasoning": reasoning,
+                            "tool_steps": tool_steps,
+                            "content": ai_response,
+                        },
+                    ],
+                },
+            )
 
             return JSONResponse(
                 {
@@ -414,7 +444,7 @@ async def chat(
 @router.get("/{session_id}")
 async def get_chat_session(
     request: Request,
-    gateway_url: str = Depends(get_gateway_url),
+    gateway_params: str = Depends(get_gateway_params),
     session_id: str = Path(..., min_length=1),
 ):
 
@@ -423,8 +453,8 @@ async def get_chat_session(
     async with httpx2.AsyncClient(timeout=None) as client:
         try:
             response = await client.get(
-                f"{gateway_url}/api/sessions/{session_id}/messages",
-                headers=get_gateway_headers(),
+                f"{gateway_params['url']}/api/sessions/{session_id}/messages",
+                headers=gateway_params["headers"],
             )
             response.raise_for_status()
             result = response.json()

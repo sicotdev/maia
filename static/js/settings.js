@@ -24,6 +24,10 @@ function get_setting(key) {
     return settings[key];
 }
 
+function set_settings_cookie() {
+    document.cookie = `llmEndpoint=${get_setting('llmEndpoint')};hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+}
+
 function loadFromLocalStorage() {
     
     for (const key in STORAGE_KEYS) {
@@ -44,8 +48,8 @@ function loadFromLocalStorage() {
             settings[key] = DEFAULT_VALUES[key];
     }
 
-    //Set profile cookie
-    document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+    //Set cookie
+    set_settings_cookie();
 }
 
 function populateSelects() {
@@ -91,6 +95,7 @@ function applySettings() {
 function saveSettings() {
 
     const oldProfile = get_setting('hermesProfile');
+    const oldEndPoint = get_setting('llmEndpoint');
 
     for (const key in STORAGE_KEYS) {
         const elemId = camelToKebab(key);
@@ -100,10 +105,13 @@ function saveSettings() {
         settings[key] = value;
     }
 
-    //Apply profile change
+    //Apply llm/profile change
     const newProfile = get_setting('hermesProfile');
-    if (oldProfile != newProfile) {
-        document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+    const newEndPoint = get_setting('llmEndpoint');
+    if (oldProfile != newProfile || oldEndPoint != newEndPoint) {
+
+        //Save new cookie
+        set_settings_cookie();
 
         //Clear sessions immediatly
         document.getElementById('conversation-list').innerHTML = '<span class="spinner"></span>';
@@ -127,6 +135,7 @@ function saveSettings() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    
     try {
         // 1. Get data from backend
         const response = await fetch('/settings');
@@ -148,4 +157,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Erreur d\'initialisation des paramètres:', error);
     }
+
+    const selectLLM = document.getElementById('llm-endpoint');
+    selectLLM.addEventListener('change', () => onLLMSelectChange(selectLLM));
+    onLLMSelectChange(selectLLM);
 });
+
+function onLLMSelectChange(selectLLM) {
+    const selectProfile = document.getElementById('hermes-profile-container');
+    console.log('change');
+    if (selectLLM.value != 0)
+        selectProfile.style.visibility = 'hidden';
+    else
+        selectProfile.style.visibility = 'visible';
+}

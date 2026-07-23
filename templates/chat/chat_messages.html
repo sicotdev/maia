@@ -7,3 +7,9 @@
     hx-swap-oob='true'
  >
  {% endif %}
+ {% if previous_response_id %}
+<input type="hidden" name="previous_response_id" id="previous_response_id" autocomplete="off"
+    value="{{ previous_response_id }}"
+    hx-swap-oob='true'
+ >
+ {% endif %}
