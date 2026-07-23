@@ -4,10 +4,11 @@ import httpx2
 import numpy as np
 import soundfile as sf
 import requests
-       
+
 from maia.voice.classes.tts_engine import TTSEngine
 
-class KyutaiTTS(TTSEngine):
+
+class DistantTTS(TTSEngine):
     def __init__(self, base_url: str = "http://127.0.0.1:8756"):
         self.base_url = base_url
 
@@ -19,10 +20,11 @@ class KyutaiTTS(TTSEngine):
         )
         resp.raise_for_status()
 
+    async def generate_audio_stream(
+        self, text: str, output_name: str, output_dir: str, tmp_dir: str, voice: int
+    ):
 
-    async def generate_audio_stream(self, text: str, output_name: str, output_dir: str, tmp_dir: str, voice: int):
-
-        chunks = [chunk.strip() for chunk in text.split('\n') if chunk.strip()]
+        chunks = [chunk.strip() for chunk in text.split("\n") if chunk.strip()]
         audio_segments = []
 
         async with httpx2.AsyncClient(timeout=None) as client:
@@ -36,7 +38,9 @@ class KyutaiTTS(TTSEngine):
                     )
                     response.raise_for_status()
 
-                    data, samplerate = await asyncio.to_thread(self._process_chunk, chunk_file)
+                    data, samplerate = await asyncio.to_thread(
+                        self._process_chunk, chunk_file
+                    )
 
                     yield f"event: chunk\ndata: {chunk_file}\n\n"
 
@@ -46,14 +50,14 @@ class KyutaiTTS(TTSEngine):
                     print(f"something went wrong on chunk {i}: {e}")
                     yield f"event: error\ndata: chunk {i} failed\n\n"
 
-        #Merge final file
+        # Merge final file
         final_file = f"{output_dir}/{output_name}.wav"
-        if (len(audio_segments) > 0):
+        if len(audio_segments) > 0:
             merged = np.concatenate(audio_segments, axis=0)
             await asyncio.to_thread(
                 self._write_wav, final_file, merged, samplerate=samplerate
             )
-        
+
         yield f"event: done\ndata: {final_file}\n\n"
 
     @staticmethod
@@ -66,4 +70,3 @@ class KyutaiTTS(TTSEngine):
     def _write_wav(file: str, audio: np.ndarray, samplerate: int):
         sf.write(file, audio, samplerate)
         TTSEngine.normalize_audio(file, file)
-        

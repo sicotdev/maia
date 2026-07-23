@@ -5,7 +5,6 @@ let loading = false;
 let autoRunning = false;
 let ending = false;
 
-const chunkTexts = [];
 let chunkIndex = 0;
 
 function enqueueAudio(url) {
@@ -28,6 +27,11 @@ function playNext() {
 function updateAutoAudioGeneration(cleanAnswer, messageId) {
     if (autoRunning) return;
     autoRunning = true;
+
+    chunkIndex = 0;
+    loading = false;
+    ending = false;
+    
     autoRunningLoop(cleanAnswer, messageId);
 }
 

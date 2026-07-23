@@ -7,9 +7,13 @@ import re
 from maia.voice.classes.tts_engine import TTSEngine
 from maia.voice.classes.pocket_tts import PocketTTS
 from maia.voice.classes.kokoro_tts import KokoroTTS
-from maia.voice.classes.kyutai_tts import KyutaiTTS
-from maia.voice.classes.coqui_x_tts import CoquiXTTS
+from maia.voice.classes.distant_tts import DistantTTS
+
+# from maia.voice.classes.coqui_x_tts import CoquiXTTS
 from maia.voice.classes.mock_tts import MockTTS
+
+KYUTAI_URL = "http://127.0.0.1:8756"
+COQUI_URL = "http://127.0.0.1:8757"
 
 # Load models conditionally to save memory on local development
 use_mock = os.getenv("MAIA_MOCK_STT_AND_TTS", "0") == "1"
@@ -19,8 +23,8 @@ if use_mock:  # one mock for each TTS engine
 else:
     tts_engines = [
         PocketTTS(),
-        KyutaiTTS(),
-        CoquiXTTS(),
+        DistantTTS(KYUTAI_URL),
+        DistantTTS(COQUI_URL),
         KokoroTTS(),
     ]
 

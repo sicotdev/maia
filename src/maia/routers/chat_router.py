@@ -316,6 +316,8 @@ async def chat(
 
     payload = {
         "model": "hermes-llm",
+        # "reasoning": { "effort": "low" },
+        # "instructions": "This is a phone call, keep your response short and vivid.",
         "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
     }
