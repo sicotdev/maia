@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
     ttsSpeed: 'maia_tts_speed',
     ttsVolume: 'maia_tts_volume',
     ttsAutoRead: 'maia_tts_auto_read',
+    llmEndpoint: 'maia_llm_endpoint',
     hermesProfile: 'maia_hermes_profile'
 };
 const DEFAULT_VALUES = {
@@ -12,6 +13,7 @@ const DEFAULT_VALUES = {
     ttsSpeed: 1.0,
     ttsVolume: 100,
     ttsAutoRead: false,
+    llmEndpoint: 0,
     hermesProfile: 0
 };
 const settings = {};
@@ -49,6 +51,7 @@ function loadFromLocalStorage() {
 function populateSelects() {
     fillSelect(document.getElementById('tts-engine'), settings_config.engines);
     fillSelect(document.getElementById('tts-voice'), settings_config.voices);
+    fillSelect(document.getElementById('llm-endpoint'), settings_config.llmEndpoints);
     fillSelect(document.getElementById('hermes-profile'), settings_config.profiles);
 }
 

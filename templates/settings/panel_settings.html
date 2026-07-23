@@ -1,6 +1,5 @@
-
 <div class="settings-header">
-    <h2>⚙️ Paramètres</h2>
+    <h2>⚙️ Configuration du modèle</h2>
     <p>Configurez votre expérience utilisateur et les réglages du système.</p>
 </div>
 
@@ -34,6 +33,17 @@
         <div class="setting-item checkbox">
             <label for="tts-auto-read">Lecture automatique</label>
             <input type="checkbox" id="tts-auto-read">
+        </div>
+    </section>
+
+    <section class="settings-section">
+        <h3>🌐 Endpoint du LLM</h3>
+        <div class="setting-item">
+            <label for="llm-endpoint">Endpoint :</label>
+            <select id="llm-endpoint">
+                <option value="">Chargement des endpoints...</option>
+                <!-- will be filled dinamically -->
+            </select>
         </div>
     </section>
 
