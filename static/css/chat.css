@@ -137,6 +137,10 @@ details .details-body {
 
 
 /* ---- Form ---- */
+#chat-form.hidden {
+    display: none;
+}
+
 .input-area {
     padding: 20px;
     background-color: var(--chat-bg);
@@ -162,4 +166,17 @@ details .details-body {
 
 .custom-spinner img {
     height: 100px;
+}
+
+
+#voice-call-active {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 20px;
+    border-top: 1px solid var(--border-color);
+}
+#voice-call-active.visible {
+    display: flex;
 }

@@ -23,6 +23,26 @@ function userInputAfterRequest(event) {
     parseMd(newMessage.querySelector('.message-text'));
     formatTimestamps(newMessage);
     scrollDown(container);
+
+    //Check if we're streaming ai response or not
+    const aiMessage = newMessage.nextElementSibling;
+    if (!aiMessage.classList.contains('message-stream')) {
+        
+        //Not streaming, we can process the answer
+        const aiText = aiMessage.querySelector('.message-text');
+        parseMd(aiText, aiText.textContent);
+
+        //Audio
+        const messageId = aiText.id.substring("message-text-".length);
+        const audioContainer = aiMessage.querySelector(".audio-container");
+        if (get_setting('ttsAutoRead'))
+            startAudioGeneration(audioContainer.querySelector('button'), messageId);
+        
+        audioContainer.classList.add("visible");
+
+        //Re-enable buttons and textarea
+        document.querySelectorAll('#chat-form button, #chat-form textarea').forEach(elem => elem.disabled = false);
+    }
 }
 
 function onChatSettle(container, event) {

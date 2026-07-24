@@ -21,14 +21,35 @@ button.error {
     background-color: var(--error-color);
 }
 
+.btn-reload {
+    padding: 0;
+    margin: 5px;
+    background-color: transparent;
+    display: none;
+}
+.btn-reload.visible {
+    display: block;
+}
+.btn-reload span {
+    display: block;
+}
+.btn-reload span.hidden {
+    display: none;
+}
+.btn-reload svg {
+    width: 18px;
+    height: 18px;
+}
+
 .stt-btn {
     background-color: #4caf50;
 }
 
-.stt-btn.active {
+.stt-btn.active, .voice-call-btn.active {
     background-color: #f44336;
     animation: pulse 1.5s infinite;
 }
+
 
 @keyframes pulse {
     0% { transform: scale(1); }

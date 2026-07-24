@@ -310,8 +310,8 @@ async def chat_stream(
 
 
 # Classic chat endpoint; returns the whole response at once.
-# TODO: check this to call LMStudio directly or any openAPI compatible (we won't use it for hermes anymore)
-# I think we will need the whole context, not just previous_response_id
+# Used to call LMStudio directly or any openAPI compatible (we don't use it for hermes anymore)
+# use previous_response_id to chain, but conversions are not saved
 # @router.post("/response")
 async def get_response(
     request: Request,
@@ -323,7 +323,7 @@ async def get_response(
     payload = {
         "model": "hermes-llm",
         "reasoning": {"effort": "none"},
-        "instructions": "This is a phone call, keep your response short and vivid.",
+        "instructions": "This is a phone call in french, keep your response short and casual.",
         "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
         # "stream": True, TODO stream
@@ -405,19 +405,7 @@ async def get_response(
                 },
             )
 
-            return JSONResponse(
-                {
-                    "role": "assistant",
-                    "content": ai_response,
-                    "tool_steps": tool_steps,  # to display on the frontend as "cards" of progress
-                    "response_id": result.get(
-                        "id"
-                    ),  # to send back next turn as previous_response_id
-                    "usage": result.get("usage", {}),
-                    "error": False,
-                }
-            )
-
+        # TODO: no JSON
         except httpx2.HTTPStatusError as e:
             logger.error(
                 f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}",

@@ -1,20 +1,22 @@
 //TTS streamed from backend
 const queue = [];
-let playing = false;
+let TTSplaying = false;
 let loading = false;
 let autoRunning = false;
 let ending = false;
 
 let chunkIndex = 0;
 
+function isTTSPlaying() { return loading || TTSplaying; }
+
 function enqueueAudio(url) {
     queue.push(url);
-    if (!playing) playNext();
+    if (!TTSplaying) playNext();
 }
 
 function playNext() {
-    if (queue.length === 0) { playing = false; return; }
-    playing = true;
+    if (queue.length === 0) { TTSplaying = false; return; }
+    TTSplaying = true;
     const url = queue.shift();
     const audio = new Audio(`${url}${DEBUG?'?t='+Date.now():''}`);
     audio.volume = get_setting('ttsVolume') / 100;
@@ -105,6 +107,8 @@ async function generateAllChunks(tmp_id, messageId) {
 
     //Empty text
     if (chunks.length == 0) {
+        chunkIndex = 0;
+        loading = false;
         ending = false;
         return;
     }
@@ -160,8 +164,18 @@ async function waitEnding() {
 async function startAudioGeneration(button, messageId) {
     if (button.disabled) return; // should not happen, better safe than sorry
 
+    loading = true;
+
+    const isReload = button.classList.contains('btn-reload');
     button.disabled = true;
-    button.innerHTML = "<span class='spinner'></span>";
+    if (isReload) {
+        const span = document.createElement('span')
+        span.className = 'spinner';
+        button.querySelector('span').classList.add('hidden');
+        button.appendChild(span);
+    }
+    else
+        button.innerHTML = "<span class='spinner'></span>";
     button.classList.remove('error');
 
     //Send the entire text
@@ -175,12 +189,18 @@ async function startAudioGeneration(button, messageId) {
     evtSource.addEventListener('chunk', (event) => {
         chunkReceived = true;
         enqueueAudio(event.data);
+        loading = false;
     });
 
     evtSource.addEventListener('done', () => {
         const finalAudioUrl = event.data;
         const autoplay = !chunkReceived; // meaning we already had the final wav file
-        button.remove();
+        if (isReload) {
+            button.querySelectorAll('span').forEach((elem) => { if (elem.className == 'spinner') elem.remove(); else elem.classList.remove('hidden'); });
+            button.disabled = false;
+        }
+        else
+            button.remove();
         showFinalAudioPlayer(messageId, finalAudioUrl, autoplay);
         evtSource.close();
     });
@@ -189,7 +209,7 @@ async function startAudioGeneration(button, messageId) {
         console.error('SSE error:', err);
         evtSource.close();
         button.disabled = false;
-        button.innerHTML = "Error: Réessayer";
+        button.innerHTML = "<span>Error: Réessayer</span>";
         button.classList.add('error');
     };
 
@@ -209,6 +229,9 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
 
     if (autoplay)
         audio.play();
+
+    //Show reload button
+    audio.nextElementSibling.classList.add('visible');
 }
 
 //TODO: put this elsewhere

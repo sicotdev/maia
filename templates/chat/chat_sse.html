@@ -8,7 +8,7 @@
 
 {# ai stream response (identical to chat_message.html but with sse event listeners ) #}
 <div
-    class="message role-assistant"
+    class="message role-assistant message-stream"
     hx-ext="sse" sse-connect="{{ sse_url }}" sse-close="done" 
     hx-on:htmx:sse-close="onChatStreamEnd(this, '{{ tmp_id }}')"
     >

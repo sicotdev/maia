@@ -12,6 +12,7 @@ class DistantTTS(TTSEngine):
     def __init__(self, base_url: str = "http://127.0.0.1:8756"):
         self.base_url = base_url
 
+    # TODO: async (same in mother class)
     def generate_audio(self, text: str, output_file: str, voice: int):
 
         resp = requests.post(
