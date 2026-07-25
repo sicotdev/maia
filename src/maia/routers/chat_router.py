@@ -323,7 +323,7 @@ async def get_response(
     payload = {
         "model": "hermes-llm",
         "reasoning": {"effort": "none"},
-        "instructions": "This is a phone call in french, keep your response short and casual.",
+        "instructions": "This is a phone call in french, keep your response short and casual. You're a young woman, just talking with your male friend.",
         "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
         # "stream": True, TODO stream

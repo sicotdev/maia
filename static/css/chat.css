@@ -162,6 +162,7 @@ details .details-body {
     overflow: hidden;
     box-sizing: border-box;
     min-height: 40px;
+    height: 40px;
 }
 
 .custom-spinner img {

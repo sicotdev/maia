@@ -1,6 +1,8 @@
+const SILENCE_THRESHOLD = 15;
+const MAX_SILENCE_MS = 1000;
+
 let voiceCallActive = false;
 let isRecording = false;
-let mediaRecorder = null;
 
 //Voice call button
 function initVoiceCallButton() {
@@ -25,6 +27,8 @@ async function startVoiceCall() {
     const chatForm = document.getElementById('chat-form');
     chatForm.classList.add('hidden');
 
+    document.getElementById('user-input').value = '';
+
     const voiceCallContainer = document.getElementById('voice-call-active');
     voiceCallContainer.classList.add('visible');
 
@@ -32,8 +36,9 @@ async function startVoiceCall() {
     const voiceCallMessage = document.getElementById('voice-call-message');
 
     startVoiceCallBtn.innerHTML = "Parlez pour commencer";
-    voiceCallMessage.innerHTML = "Appuyez sur le bouton arrêter l'appel.";
+    voiceCallMessage.innerHTML = "Appuyez sur le bouton pour arrêter l'appel.";
 
+    const inputField = document.getElementById('user-input');
     while (voiceCallActive) {
         
         try {
@@ -43,6 +48,13 @@ async function startVoiceCall() {
 
             showPanel('chat');
 
+            //No input detected
+            if (inputField.value == '')
+                continue;
+
+            //Shortcut if user cancel the call
+            if (!voiceCallActive) break;
+            
             //Auto send form
             chatForm.requestSubmit();
 
@@ -52,7 +64,7 @@ async function startVoiceCall() {
             console.log('AI start talking');
 
             //Ai audio talk
-            await waitAITalking()
+            await waitAITalking();
 
             console.log('AI end talking');
         }
@@ -60,6 +72,9 @@ async function startVoiceCall() {
             voiceCallActive = false;
         }
     }
+
+    // prevent sendingToWhisper
+    isRecording = false;
 
     voiceCallContainer.classList.remove('visible');
     chatForm.classList.remove('hidden');
@@ -74,15 +89,19 @@ async function waitUserMessage() {
         let stopped = false;
 
         try {
-            const mediaRecorder = startRecording(() => {
+            const mediaRecorder = await startRecording(() => {
                 resolve();
                 stopped = true;
             })
 
             while (voiceCallActive && !stopped)
                 await sleep(100);
-            if (!stopped)
+            
+            if (!stopped) {
+                isRecording = false;
                 mediaRecorder.stop();
+                resolve();
+            }
         }
         catch (e) {
             reject(e);
@@ -111,25 +130,35 @@ async function waitAITalking() {
 
 
 async function startRecording(endCallBack) {
+    
     isRecording = true;
     const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
         }
     });
+    console.log('start recording')
     const mediaRecorder = new MediaRecorder(stream);
     const audioChunks = [];
 
     mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+        //Avoid recording while playing AI voice
+        if (!isTTSPlaying())
+            audioChunks.push(event.data);
     };
 
     mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        sendAudioToWhisper(audioBlob, endCallBack);
-        
+        console.log('stoppped recording')
+        if (isRecording) {
+            if (audioChunks.length > 0) {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                sendAudioToWhisper(audioBlob, endCallBack);
+            }
+            else
+                endCallBack();
+        }
         // Stop all tracks to release the microphone
         stream.getTracks().forEach(track => track.stop());
         isRecording = false;
@@ -145,27 +174,39 @@ async function startRecording(endCallBack) {
     microphone.connect(analyser);
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    const SILENCE_THRESHOLD = 30;
-    const MAX_SILENCE_MS = 1000;
     let silenceStart = 0;
     let recordStarted = false;
+    let silenceStarted = false;
 
     function checkSilence() {
         if (!isRecording) return;
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
-        }
-        let average = sum / dataArray.length;
 
-        if (average > SILENCE_THRESHOLD) {
-            recordStarted = true;
-            silenceStart = new Date().getTime();
-        }
+        if (!isTTSPlaying()) {
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            let average = sum / dataArray.length;
 
-        if (recordStarted && new Date().getTime() - silenceStart > MAX_SILENCE_MS) {
-            mediaRecorder.stop();
+            if (average > SILENCE_THRESHOLD) {
+                recordStarted = true;
+                silenceStarted = false;
+            }
+            else {
+                if (recordStarted && !silenceStarted) {
+                    silenceStarted = true;
+                    silenceStart = new Date().getTime();
+                }
+            }
+
+            //console.log(average, silenceStarted);
+            //if (silenceStarted)
+            //    console.log(new Date().getTime() - silenceStart)
+
+            if (silenceStarted && new Date().getTime() - silenceStart > MAX_SILENCE_MS) {
+                mediaRecorder.stop();
+            }
         }
 
         requestAnimationFrame(checkSilence);
@@ -197,8 +238,7 @@ async function sendAudioToWhisper(blob, endCallBack) {
         }
     } catch (err) {
         console.error('Transcription error:', err);
-        //TODO: improve this
-        alert('Erreur de transcription.');
+        endCallBack();
     }
 }
 
@@ -219,14 +259,14 @@ function initSTTButton() {
 
         if (!isRecording) {
             sttBtn.classList.add('active');
-            startVoiceCallBtn.disabled = false;
+            startVoiceCallBtn.disabled = true;
             isRecording = true;
             try {
                 mediaRecorder = await startRecording(() => {
                     sttBtn.classList.remove('active');
                     isRecording = false;
                     sttBtn.disabled = false;
-                    startVoiceCallBtn.disabled = true;
+                    startVoiceCallBtn.disabled = false;
                 });
             }
             catch (e) {

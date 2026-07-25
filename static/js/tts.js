@@ -1,22 +1,24 @@
 //TTS streamed from backend
 const queue = [];
-let TTSplaying = false;
+let ttsPlaying = false;
+let playing = false;
 let loading = false;
 let autoRunning = false;
 let ending = false;
 
 let chunkIndex = 0;
 
-function isTTSPlaying() { return loading || TTSplaying; }
+//Avoid to record while TTS is playing
+function isTTSPlaying() { return loading || playing; }
 
 function enqueueAudio(url) {
     queue.push(url);
-    if (!TTSplaying) playNext();
+    if (!playing) playNext();
 }
 
 function playNext() {
-    if (queue.length === 0) { TTSplaying = false; return; }
-    TTSplaying = true;
+    if (queue.length === 0) { playing = false; return; }
+    playing = true;
     const url = queue.shift();
     const audio = new Audio(`${url}${DEBUG?'?t='+Date.now():''}`);
     audio.volume = get_setting('ttsVolume') / 100;
@@ -189,7 +191,6 @@ async function startAudioGeneration(button, messageId) {
     evtSource.addEventListener('chunk', (event) => {
         chunkReceived = true;
         enqueueAudio(event.data);
-        loading = false;
     });
 
     evtSource.addEventListener('done', () => {
@@ -201,6 +202,8 @@ async function startAudioGeneration(button, messageId) {
         }
         else
             button.remove();
+        
+        loading = false;
         showFinalAudioPlayer(messageId, finalAudioUrl, autoplay);
         evtSource.close();
     });
@@ -208,6 +211,8 @@ async function startAudioGeneration(button, messageId) {
     evtSource.onerror = (err) => {
         console.error('SSE error:', err);
         evtSource.close();
+
+        loading = false;
         button.disabled = false;
         button.innerHTML = "<span>Error: Réessayer</span>";
         button.classList.add('error');
@@ -226,6 +231,8 @@ function showFinalAudioPlayer(messageId, url, autoplay = false) {
 
     audio.volume = get_setting('ttsVolume') / 100;
     audio.playbackRate = get_setting('ttsSpeed');
+    audio.onplay = () => { playing = true; };
+    audio.onended = () => { playing = false; }
 
     if (autoplay)
         audio.play();

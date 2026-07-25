@@ -34,6 +34,7 @@ function sessionClickAfterRequest() {
 function sessionNewBtnClick() {
     document.getElementById('chat-container').innerHTML = '';
     document.getElementById('session_id').value = '';
+    document.getElementById('previous_response_id').value = '';
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
     showPanel('chat');
 }

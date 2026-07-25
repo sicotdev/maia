@@ -2,6 +2,8 @@
 # os.environ["HF_HUB_CACHE"] = r"C:\path\to\copied\hub"   # or wherever you put it
 # os.environ["HF_HUB_OFFLINE"] = "1"
 
+import threading
+
 from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -15,6 +17,9 @@ torch._dynamo.config.disable = True  # need to do that before import moshi
 from moshi.models.loaders import CheckpointInfo  # noqa: E402
 from moshi.models.tts import TTSModel  # noqa: E402
 
+# Make sure to make one generation at a time
+model_lock = threading.Lock()
+
 app = FastAPI()
 
 SAMPLE_RATE = 24000
@@ -25,7 +30,7 @@ checkpoint_info = CheckpointInfo.from_hf_repo("kyutai/tts-1.6b-en_fr")
 model = TTSModel.from_checkpoint_info(checkpoint_info, device=torch.device(DEVICE))
 print("Model loaded.")
 
-# Map your integer voice IDs to Kyutai voice refs (repo names or local wav paths)
+# Map your integer voice IDs to Kyutai voice refs (repo names)
 VOICE_MAP = {
     0: "unmute-prod-website/developpeuse-3.wav",  # Estelle
     1: "cml-tts/fr/10177_10625_000134-0003_enhanced.wav",  # Corinne
@@ -39,13 +44,17 @@ VOICE_MAP = {
     9: "cml-tts/fr/2114_1656_000053-0001_enhanced.wav",  # Quebecois
 }
 
+# Preload voices
+print("Preload voices...")
+
+VOICE_COND = {}
 CFG_COEF = 2.0
+for i in VOICE_MAP:
+    voice_path = model.get_voice_path(VOICE_MAP[i])
+    cond = model.make_condition_attributes([voice_path], cfg_coef=CFG_COEF)
+    VOICE_COND[i] = cond
 
-
-def _condition_attributes(voice: int):
-    voice_ref = VOICE_MAP.get(voice, VOICE_MAP[0])
-    voice_path = model.get_voice_path(voice_ref)
-    return model.make_condition_attributes([voice_path], cfg_coef=CFG_COEF)
+print("Voices loaded.")
 
 
 class GenerateRequest(BaseModel):
@@ -57,7 +66,7 @@ class GenerateRequest(BaseModel):
 @app.post("/generate")
 def generate(req: GenerateRequest):
     entries = model.prepare_script([req.text], padding_between=1)
-    condition_attributes = _condition_attributes(req.voice)
+    condition_attributes = VOICE_COND.get(req.voice, VOICE_COND[0])
 
     pcms = []
 
@@ -66,8 +75,9 @@ def generate(req: GenerateRequest):
             pcm = model.mimi.decode(frame[:, 1:, :]).cpu().numpy()
             pcms.append(np.clip(pcm[0, 0], -1, 1))
 
-    with model.mimi.streaming(1):
-        model.generate([entries], [condition_attributes], on_frame=_on_frame)
+    with model_lock:
+        with model.mimi.streaming(1):
+            model.generate([entries], [condition_attributes], on_frame=_on_frame)
 
     audio = np.concatenate(pcms, axis=-1)
     Path(req.output_path).parent.mkdir(parents=True, exist_ok=True)

@@ -132,7 +132,7 @@ function initUserInput() {
 }
 
 function resizeTextarea(textarea) {
-    textarea.style.height = 'auto'; // reset height to recalculate
+    textarea.style.height = 0; // reset height to recalculate
     textarea.style.height = textarea.scrollHeight + 'px';
 }
 
