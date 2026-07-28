@@ -121,6 +121,7 @@ async def chat_stream(
 
         try:
             async with httpx2.AsyncClient(timeout=None) as client:
+                startTime = time.time()
                 async with client.stream(
                     "POST",
                     f"{gateway_params['url']}/api/sessions/{session_id}/chat/stream",
@@ -217,15 +218,16 @@ async def chat_stream(
 
                         elif current_event == "run.completed":
                             timestamp = event_data.get("ts")
+                            usage = event_data.get("usage")
                             yield _sse(
-                                "timestamp",
-                                f"<span class='timestamp'>{timestamp}</span>",
+                                "message-header",
+                                f"""<span class='timestamp'>{timestamp}</span>
+                                <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
+                                <span class='token-count'>{usage["total_tokens"]} tokens</span>""",
                             )
+                            print(usage)
 
-                            # TODO
-                            print(event_data.get("usage"))
-
-                            # TODO: no output or reasoning until run.completed
+                            # TODO: no tool outputs or reasoning until run.completed
                             # Parse the tools outputs
                             tool_index = 0
                             reasoning = ""
@@ -470,6 +472,7 @@ async def get_chat_session(
                         }
                     )
                 elif msg.get("role") == "assistant":
+                    # TODO: msg.get('token_count') is None
                     if last_ai_message is None:
                         last_ai_message = {
                             "id": int(msg.get("timestamp")),

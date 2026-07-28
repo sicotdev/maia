@@ -18,11 +18,16 @@
     display: flex;
     padding: 0 4px;
     margin-bottom: 4px;
-}
-
-.timestamp {
     font-size: 11px;
     color: #8a8a8a;
+}
+
+.elapsed-time {
+    margin-left: 8px;
+}
+
+.token-count {
+    margin-left: 8px;
 }
 
 .message-text {

@@ -15,7 +15,7 @@
 
     <input type="hidden" id="real_message_id" sse-swap="message_id" hx-swap="outerHTML">
 
-    <div class="message-header" sse-swap="timestamp" hx-on::after-swap="formatTimestamps(this)"></div>
+    <div class="message-header" sse-swap="message-header" hx-on::after-swap="formatTimestamps(this)"></div>
 
     <div class="reasoning-container" sse-swap="reasoning" hx-on::after-swap="parseMd(this.querySelector('.details-body'))"></div>
 
