@@ -71,7 +71,7 @@ function showSessionTooltip(container, tooltip) {
         tooltip.style.top = 'auto'; // reset top
         tooltip.style.bottom = `${window.innerHeight - rect.bottom}px`;
     }
-    tooltip.style.left = `${rect.right + 8}px`; // 8px to the right of the row
+    tooltip.style.left = `${rect.right}px`;
     tooltip.style.visibility = 'visible';
     tooltip.style.opacity = '1';
 }

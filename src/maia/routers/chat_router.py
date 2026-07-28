@@ -223,7 +223,7 @@ async def chat_stream(
                                 "message-header",
                                 f"""<span class='timestamp'>{timestamp}</span>
                                 <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
-                                <span class='token-count'>{usage["total_tokens"]} tokens</span>""",
+                                <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
                             )
                             print(usage)
 
