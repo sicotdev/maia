@@ -25,7 +25,8 @@ function get_setting(key) {
 }
 
 function set_settings_cookie() {
-    document.cookie = `llmEndpoint=${get_setting('llmEndpoint')};hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+    document.cookie = `llmEndpoint=${get_setting('llmEndpoint')}; path=/; SameSite=Lax;`;
+    document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
 }
 
 function loadFromLocalStorage() {
@@ -47,9 +48,6 @@ function loadFromLocalStorage() {
         else
             settings[key] = DEFAULT_VALUES[key];
     }
-
-    //Set cookie
-    set_settings_cookie();
 }
 
 function populateSelects() {
