@@ -140,6 +140,7 @@ async def chat_stream(
                     tool_index = 0
                     started = False
                     message_id = 0
+                    delta_received = False
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
@@ -210,11 +211,15 @@ async def chat_stream(
                         elif current_event == "assistant.delta":
                             delta = event_data.get("delta", "")
                             if delta:
+                                delta_received = True
                                 yield _sse("text_delta", escape(delta))
 
                         elif current_event == "assistant.completed":
                             # store the timestamp as id
                             message_id = int(event_data.get("ts"))
+                            # No delta means it's an error message
+                            if not delta_received:
+                                print(escape(event_data.get("content")))
 
                         elif current_event == "run.completed":
                             timestamp = event_data.get("ts")
@@ -459,6 +464,7 @@ async def get_chat_session(
             messages = []
             last_ai_message = None
             for msg in result.get("data", []):
+                print(msg)
                 if msg.get("role") == "user":
                     if last_ai_message is not None:
                         messages.append(last_ai_message)

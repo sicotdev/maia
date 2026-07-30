@@ -10,7 +10,7 @@ from maia.voice.service_stt import transcribe_audio
 from maia.voice.service_tts import generate_audio, merge_audio, generate_audio_stream
 
 
-FORCE_RELOAD_WAV = os.getenv("DEBUG") or False
+FORCE_RELOAD_WAV = False  # os.getenv("DEBUG") or False
 
 # Where wav files are generated:
 # TODO: clean this dir sometimes
