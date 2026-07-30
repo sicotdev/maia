@@ -55,6 +55,24 @@ async def create_session(gateway_params: dict[str, Any]) -> dict[str, Any]:
         return data["session"]
 
 
+async def create_run(
+    gateway_params: dict[str, Any], message: str, session_id: str
+) -> dict[str, Any]:
+    async with httpx2.AsyncClient(timeout=None) as client:
+        headers = gateway_params["headers"]
+
+        print("creating run")
+
+        resp = await client.post(
+            f"{gateway_params['url']}/v1/runs",
+            headers=headers,
+            json={"input": message, "session_id": session_id},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data
+
+
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
 @router.post("/start")
 async def chat_start(
@@ -63,12 +81,13 @@ async def chat_start(
     message: str = Form(..., min_length=1),
     session_id: str = Form(None),
     previous_response_id: str = Form(None),
+    is_voicecall: bool = Form(False),
 ):
 
     # Call normal v1/response
     if gateway_params["is_custom"]:
         return await get_response(
-            request, gateway_params, message, previous_response_id
+            request, gateway_params, message, previous_response_id, is_voicecall
         )
 
     session = None
@@ -80,16 +99,25 @@ async def chat_start(
         session = await create_session(gateway_params)
         session_id = session["id"]
         session["preview"] = message
+        session["last_active"] = session["started_at"]
         if len(session["preview"]) > 63:
             session["preview"] = session["preview"][:60] + "..."
 
-    print(f"session_id is {session_id}")
+    # print(f"new session: {session}")
 
-    # Generate a unique message id
-    message_id = uuid.uuid4().hex
+    # Create a run
+    # TODO: we need to chain the conversation_history. Another pb is there is no tool outputs or reasonning
+    # run = await create_run(gateway_params, message, session_id)
+    # print(run)
+    # run_id = run.get("run_id")
+    # qs = urlencode({"run_id": run_id})
+    # sse_url = f"/chat/run?{qs}"
 
     qs = urlencode({"message": message, "session_id": session_id})
     sse_url = f"/chat/stream?{qs}"
+
+    # Generate a unique message id
+    message_id = uuid.uuid4().hex
 
     return templates.TemplateResponse(
         request=request,
@@ -316,6 +344,207 @@ async def chat_stream(
     )
 
 
+@router.get("/run")
+async def chat_run(
+    gateway_params: str = Depends(get_gateway_params),
+    run_id: str = Query(..., min_length=1),
+):
+
+    async def event_generator():
+
+        try:
+            async with httpx2.AsyncClient(timeout=None) as client:
+                startTime = time.time()
+                async with client.stream(
+                    "GET",
+                    f"{gateway_params['url']}/v1/runs/{run_id}/events",
+                    headers=gateway_params["headers"],
+                ) as response:
+                    if response.status_code >= 400:
+                        body = await response.aread()
+                        logger.error(
+                            f"Gateway HTTP Error: {response.status_code} - {body.decode(errors='replace')}"
+                        )
+                        yield _sse_error()
+                        return
+
+                    current_event = None
+                    tool_index = 0
+                    started = False
+                    message_id = 0
+                    delta_received = False
+                    async for raw_line in response.aiter_lines():
+                        line = raw_line.strip("\n")
+
+                        print(f"{raw_line}")  # Debugging line
+
+                        if not line.startswith("data:"):
+                            continue
+
+                        raw_data = line[len("data:") :].strip()
+                        if not raw_data:
+                            continue
+
+                        try:
+                            event_data = json.loads(raw_data)
+                        except json.JSONDecodeError:
+                            # Payload is truncated or too long (see known issue with
+                            # response.completed), so we ignore it; everything has already
+                            # been reconstructed from the progressive events.
+                            continue
+
+                        current_event = event_data.get("event")
+
+                        # if current_event == "run.started":
+                        if current_event == "message.started":
+                            # Started received
+                            print("stream started")
+                            started = True
+                            # print(event_data);
+                            continue
+
+                        # Send first_event after message.delta received
+                        if started:
+                            yield _sse("first_event", "<span class='spinner'></span>")
+                            started = False
+
+                        if current_event == "tool.started":
+                            yield _sse(
+                                "tool_call",
+                                templates.get_template(
+                                    "chat/parts/chat_tool_call.html"
+                                ).render(
+                                    {
+                                        "call": {
+                                            "name": event_data.get("tool"),
+                                            "arguments": event_data.get("preview")
+                                            or "",
+                                            "output": "",
+                                        },
+                                        "sse_swap": f"tool_call_{tool_index}",
+                                    }
+                                ),
+                            )
+                            tool_index += 1
+
+                        # TODO: no output until run.completed
+                        # elif current_event == "tool.completed":
+
+                        #     yield _sse(
+                        #         f"tool_call_{tool_index}",
+                        #         templates.get_template("chat/parts/chat_tool_call_output.html").render({
+                        #             "call": {
+                        #                 "output": str(event_data.get("output") or ''),
+                        #             }
+                        #         })
+                        #     )
+
+                        elif current_event == "message.delta":
+                            delta = event_data.get("delta", "")
+                            if delta:
+                                delta_received = True
+                                yield _sse("text_delta", escape(delta))
+
+                        elif current_event == "run.completed":
+                            timestamp = event_data.get("timestamp")
+                            message_id = timestamp
+                            usage = event_data.get("usage")
+                            yield _sse(
+                                "message-header",
+                                f"""<span class='timestamp'>{timestamp}</span>
+                                <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
+                                <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
+                            )
+                            print(usage)
+
+                            # No delta means it's an error message
+                            if not delta_received:
+                                print(escape(event_data.get("output")))
+
+                            # TODO: no tool outputs or reasoning AT ALL
+                            # Parse the tools outputs
+                            # tool_index = 0
+                            # reasoning = ""
+                            # for item in event_data.get("messages"):
+                            #     msg_reasonning = item.get("reasoning")
+                            #     if msg_reasonning and msg_reasonning.lstrip():
+                            #         reasoning += msg_reasonning
+                            #         yield _sse(
+                            #             "reasoning",
+                            #             templates.get_template(
+                            #                 "chat/parts/chat_reasoning.html"
+                            #             ).render(
+                            #                 {
+                            #                     "msg": {
+                            #                         "reasoning": reasoning,
+                            #                     }
+                            #                 }
+                            #             ),
+                            #         )
+
+                            #     if item.get("role") == "tool":
+                            #         yield _sse(
+                            #             f"tool_call_{tool_index}",
+                            #             templates.get_template(
+                            #                 "chat/parts/chat_tool_call_output.html"
+                            #             ).render(
+                            #                 {
+                            #                     "call": {
+                            #                         "output": str(
+                            #                             item.get("content") or ""
+                            #                         ),
+                            #                     }
+                            #                 }
+                            #             ),
+                            #         )
+                            #         tool_index += 1
+
+                        elif current_event == "done":
+                            print("stream done")
+                            break
+
+                    # yield real message_id
+                    yield _sse(
+                        "message_id",
+                        f"<input type='hidden' id='real_message_id' value='{message_id}'>",
+                    )
+
+                    # yield audio container with message_id
+                    yield _sse(
+                        "audio",
+                        templates.get_template("chat/parts/chat_audio.html").render(
+                            {"msg": {"id": message_id}}
+                        ),
+                    )
+
+                    # DONE
+                    yield _sse(
+                        "done",
+                        "",
+                    )
+
+        except httpx2.HTTPStatusError as e:
+            logger.error(
+                f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}",
+                exc_info=True,
+            )
+            yield _sse_error()
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in chat_stream router: {str(e)}", exc_info=True
+            )
+            yield _sse_error()
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # prevent buffering for nginx
+        },
+    )
+
+
 # Classic chat endpoint; returns the whole response at once.
 # Used to call LMStudio directly or any openAPI compatible (we don't use it for hermes anymore)
 # use previous_response_id to chain, but conversions are not saved
@@ -325,18 +554,24 @@ async def get_response(
     gateway_params: dict[str, Any],
     message: str,
     previous_response_id: str,
+    is_voicecall: bool,
 ):
 
     payload = {
         "model": "hermes-llm",
-        "reasoning": {"effort": "none"},
-        "instructions": "This is a phone call in french, keep your response short and casual. You're a young woman, just talking with your male friend.",
         "input": message,
         "store": True,  # request to keep the conversation history with previous_response_id
         # "stream": True, TODO stream
     }
     if previous_response_id:
         payload["previous_response_id"] = previous_response_id
+
+    # Phone call instructions
+    if is_voicecall:
+        payload["instructions"] = (
+            "This is a phone call in french, keep your response short and casual. You're a woman, User is a man."
+        )
+        payload["reasoning"] = {"effort": "none"}
 
     async with httpx2.AsyncClient(timeout=None) as client:
         error_message = (
@@ -460,61 +695,7 @@ async def get_chat_session(
                 f"Loaded chat session messages: {len(result.get('data', []))}"
             )  # Debugging line
 
-            # Reformat the messages to include tool calls and results in a structured way.
-            messages = []
-            last_ai_message = None
-            for msg in result.get("data", []):
-                print(msg)
-                if msg.get("role") == "user":
-                    if last_ai_message is not None:
-                        messages.append(last_ai_message)
-                        last_ai_message = None
-                    messages.append(
-                        {
-                            "id": int(msg.get("timestamp")),
-                            "role": "user",
-                            "content": msg.get("content"),
-                            "timestamp": msg.get("timestamp"),
-                        }
-                    )
-                elif msg.get("role") == "assistant":
-                    # TODO: msg.get('token_count') is None
-                    if last_ai_message is None:
-                        last_ai_message = {
-                            "id": int(msg.get("timestamp")),
-                            "role": "assistant",
-                            "reasoning": msg.get("reasoning"),
-                            "content": msg.get("content"),
-                            "tool_steps": [],
-                            "timestamp": msg.get("timestamp"),
-                        }
-                    else:
-                        if msg.get("reasoning") and msg.get("reasoning").lstrip():
-                            last_ai_message["reasoning"] += msg.get("reasoning")
-                        if msg.get("content") is not None:
-                            last_ai_message["content"] += msg.get("content")
-                    if msg.get("tool_calls") is not None:
-                        for tool_call in msg.get("tool_calls"):
-                            last_ai_message["tool_steps"].append(
-                                {
-                                    "type": "tool_call",
-                                    "name": tool_call.get("function", {}).get("name"),
-                                    "arguments": tool_call.get("function", {}).get(
-                                        "arguments"
-                                    ),
-                                }
-                            )
-
-                elif msg.get("role") == "tool":
-                    # Set the output of the last tool call in the last AI message.
-                    if last_ai_message is None:
-                        raise Exception("Tool result without previous message")
-                    last_ai_message["tool_steps"][-1]["output"] = msg.get("content")
-                else:
-                    print(f"unknown role:{msg.get('role')}")
-
-            if last_ai_message is not None:
-                messages.append(last_ai_message)
+            messages = get_formated_messages(result.get("data", []))
 
             # print(f"Formatted chat session messages: {messages}")  # Debugging line
 
@@ -533,3 +714,122 @@ async def get_chat_session(
                 name="chat/chat_messages.html",
                 context={"messages": []},
             )
+
+
+# TODO: use this to update session titles automatically
+@router.get("/generate_title/{session_id}")
+async def generate_summary_title(
+    gateway_params: str = Depends(get_gateway_params),
+    session_id: str = Path(..., min_length=1),
+):
+
+    print(f"Generating session title for session_id: {session_id}")  # Debugging line
+
+    async with httpx2.AsyncClient(timeout=None) as client:
+        try:
+            response = await client.get(
+                f"{gateway_params['url']}/api/sessions/{session_id}/messages",
+                headers=gateway_params["headers"],
+            )
+            response.raise_for_status()
+            result = response.json()
+            messages = get_formated_messages(result.get("data", []))
+
+            # Construct input
+            input = []
+            for msg in messages:
+                input.append({"role": msg["role"], "content": msg["content"]})
+
+            input.append(
+                {"role": "user", "content": "Génère un titre pour cette conversation"}
+            )
+
+            payload = {
+                "model": "hermes-llm",
+                "input": input,
+            }
+
+            response = await client.post(
+                f"{gateway_params['url']}/v1/responses",
+                headers=gateway_params["headers"],
+                json=payload,
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            print(f"Chat response received: {result}")  # Debugging line
+
+            output = result.get("output", [])
+
+            ai_response = ""
+            for item in output:
+                item_type = item.get("type")
+                if item_type == "message":
+                    for content_part in item.get("content", []):
+                        if content_part.get("type") == "output_text":
+                            ai_response += content_part.get("text", "")
+
+            print(f"Title: {ai_response}")  # Debugging line
+
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in get_chat_session: {str(e)}", exc_info=True
+            )
+
+
+# Reformat the messages to include tool calls and results in a structured way.
+def get_formated_messages(messages_list: list):
+    messages = []
+    last_ai_message = None
+    for msg in messages_list:
+        # print(msg)
+        if msg.get("role") == "user":
+            if last_ai_message is not None:
+                messages.append(last_ai_message)
+                last_ai_message = None
+            messages.append(
+                {
+                    "id": int(msg.get("timestamp")),
+                    "role": "user",
+                    "content": msg.get("content"),
+                    "timestamp": msg.get("timestamp"),
+                }
+            )
+        elif msg.get("role") == "assistant":
+            # TODO: msg.get('token_count') is None
+            if last_ai_message is None:
+                last_ai_message = {
+                    "id": int(msg.get("timestamp")),
+                    "role": "assistant",
+                    "reasoning": msg.get("reasoning"),
+                    "content": msg.get("content"),
+                    "tool_steps": [],
+                    "timestamp": msg.get("timestamp"),
+                }
+            else:
+                if msg.get("reasoning") and msg.get("reasoning").lstrip():
+                    last_ai_message["reasoning"] += msg.get("reasoning")
+                if msg.get("content") is not None:
+                    last_ai_message["content"] += msg.get("content")
+            if msg.get("tool_calls") is not None:
+                for tool_call in msg.get("tool_calls"):
+                    last_ai_message["tool_steps"].append(
+                        {
+                            "type": "tool_call",
+                            "name": tool_call.get("function", {}).get("name"),
+                            "arguments": tool_call.get("function", {}).get("arguments"),
+                        }
+                    )
+
+        elif msg.get("role") == "tool":
+            # Set the output of the last tool call in the last AI message.
+            if last_ai_message is None:
+                raise Exception("Tool result without previous message")
+            last_ai_message["tool_steps"][-1]["output"] = msg.get("content")
+        else:
+            print(f"unknown role:{msg.get('role')}")
+
+    if last_ai_message is not None:
+        messages.append(last_ai_message)
+
+    return messages
