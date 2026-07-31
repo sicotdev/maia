@@ -36,7 +36,7 @@ main {
 
 #panel-left {
     flex-shrink: 0;
-    width: 340px;
+    width: 300px;
     background-color: var(--chat-bg);
     border-right: 1px solid var(--border-color);
     padding: 20px;

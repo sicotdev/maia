@@ -46,14 +46,46 @@ function handleSessionTooltip(container) {
 
     const clone = tooltip.cloneNode(true);
     clone.id = 'session_tooltip';
+    clone.style.display = "block";
+
+    let rowHover = false;
+    let tooltipHower = false;
+
+    const onRowHover = () => {
+        rowHover = true;
+        showSessionTooltip(container, clone);
+    };
+    const onRowLeave = () => {
+        rowHover = false;
+        if (!tooltipHower)
+            hideSessionTooltip(clone);
+    };
+    const onTooltipHover = () => {
+        tooltipHower = true;
+        showSessionTooltip(container, clone);
+    };
+    const onTooltipLeave = () => {
+        tooltipHower = false;
+        if (!rowHover)
+            hideSessionTooltip(clone);
+    };
+
     
     // Show on mouseenter or focus
-    container.addEventListener('mouseenter', () => showSessionTooltip(container, clone));
-    container.addEventListener('focus', () => showSessionTooltip(container, clone), true); // true for capture phase
+    container.addEventListener('mouseenter', onRowHover)
+    container.addEventListener('focus', onRowHover, true); // true for capture phase
 
     // Hide on mouseleave or blur
-    container.addEventListener('mouseleave', () => hideSessionTooltip(clone));
-    container.addEventListener('blur', () => hideSessionTooltip(clone), true); // true for capture phase
+    container.addEventListener('mouseleave', onRowLeave);
+    container.addEventListener('blur', onRowLeave, true); // true for capture phase
+
+    // Show on mouseenter or focus
+    clone.addEventListener('mouseenter', onTooltipHover)
+    clone.addEventListener('focus', onTooltipHover, true); // true for capture phase
+
+    // Hide on mouseleave or blur
+    clone.addEventListener('mouseleave', onTooltipLeave);
+    clone.addEventListener('blur', onTooltipLeave, true); // true for capture phase
 }
 
 function showSessionTooltip(container, tooltip) {
