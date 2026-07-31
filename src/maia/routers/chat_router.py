@@ -55,22 +55,86 @@ async def create_session(gateway_params: dict[str, Any]) -> dict[str, Any]:
         return data["session"]
 
 
+# Create a run
 async def create_run(
-    gateway_params: dict[str, Any], message: str, session_id: str
+    gateway_params: dict[str, Any],
+    message: str,
+    session_id: str,
 ) -> dict[str, Any]:
     async with httpx2.AsyncClient(timeout=None) as client:
         headers = gateway_params["headers"]
+
+        # Get conversation history for the run
+        # Test
+        # TODO: doesn't work, tool_calls and "role": "tool" disappears
+        # conversation_history = [
+        #     {"role": "user", "content": "On va effectuer un test."},
+        #     {
+        #         "role": "assistant",
+        #         "content": "J'utilise l'outil",
+        #         "tool_calls": [
+        #             {
+        #                 "id": "5V4Agj2HAcWJh8zpvrxPQMzSNH78aTIg",
+        #                 "call_id": "5V4Agj2HAcWJh8zpvrxPQMzSNH78aTIg",
+        #                 "type": "function",
+        #                 "function": {
+        #                     "name": "skill_view",
+        #                     "arguments": '{"name":"project-discovery"}',
+        #                 },
+        #             }
+        #         ],
+        #     },
+        #     {
+        #         "role": "tool",
+        #         "tool_call_id": "5V4Agj2HAcWJh8zpvrxPQMzSNH78aTIg",
+        #         "content": "Projet trouvé: Maia",
+        #     },
+        #     {"role": "assistant", "content": "C'est fait."},
+        # ]
+        # conversation_history = await get_session_messages(gateway_params, session_id)
 
         print("creating run")
 
         resp = await client.post(
             f"{gateway_params['url']}/v1/runs",
             headers=headers,
-            json={"input": message, "session_id": session_id},
+            json={
+                "input": message,
+                "session_id": session_id,  # TODO: should work when PR 62750 is accepted
+                # "conversation_history": conversation_history,
+            },
         )
         resp.raise_for_status()
         data = resp.json()
         return data
+
+
+# Get session messages
+async def get_session_messages(gateway_params: dict[str, Any], session_id: str):
+
+    async with httpx2.AsyncClient(timeout=None) as client:
+        try:
+            response = await client.get(
+                f"{gateway_params['url']}/api/sessions/{session_id}/messages",
+                headers=gateway_params["headers"],
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            print(f"Fetched chat session data: {result}")  # Debugging line
+
+            print(
+                f"Loaded chat session messages: {len(result.get('data', []))}"
+            )  # Debugging line
+
+            messages = result.get("data", [])
+            return messages
+
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in get_session_messages: {str(e)}", exc_info=True
+            )
+            return []
 
 
 # Receives the classic htmx form and returns the chat_sse container for streaming the answer.
@@ -84,7 +148,7 @@ async def chat_start(
     is_voicecall: bool = Form(False),
 ):
 
-    # Call normal v1/response
+    # Call normal v1/response with previous_response_id
     if gateway_params["is_custom"]:
         return await get_response(
             request, gateway_params, message, previous_response_id, is_voicecall
@@ -106,12 +170,22 @@ async def chat_start(
     # print(f"new session: {session}")
 
     # Create a run
-    # TODO: we need to chain the conversation_history. Another pb is there is no tool outputs or reasonning
+    # TODO: doesn't work for now
     # run = await create_run(gateway_params, message, session_id)
     # print(run)
     # run_id = run.get("run_id")
     # qs = urlencode({"run_id": run_id})
     # sse_url = f"/chat/run?{qs}"
+
+    # # Test
+    # async with httpx2.AsyncClient(timeout=None) as client:
+    #     resp = await client.get(
+    #         f"{gateway_params['url']}/v1/runs/{run_id}",
+    #         headers=gateway_params["headers"],
+    #     )
+    #     resp.raise_for_status()
+    #     data = resp.json()
+    #     print(data)
 
     qs = urlencode({"message": message, "session_id": session_id})
     sse_url = f"/chat/stream?{qs}"
@@ -137,7 +211,7 @@ async def chat_start(
     )
 
 
-# Step 2: opened by EventSource (GET only).
+# Stream using /api/sessions/
 @router.get("/stream")
 async def chat_stream(
     gateway_params: str = Depends(get_gateway_params),
@@ -344,6 +418,7 @@ async def chat_stream(
     )
 
 
+# Stream using /v1/runs/
 @router.get("/run")
 async def chat_run(
     gateway_params: str = Depends(get_gateway_params),
@@ -392,6 +467,10 @@ async def chat_run(
                             # response.completed), so we ignore it; everything has already
                             # been reconstructed from the progressive events.
                             continue
+
+                        if not started:
+                            yield _sse("first_event", "<span class='spinner'></span>")
+                            started = True
 
                         current_event = event_data.get("event")
 
@@ -518,6 +597,7 @@ async def chat_run(
                     )
 
                     # DONE
+                    # TODO: need to get the full message with api/session again LOL
                     yield _sse(
                         "done",
                         "",
@@ -680,40 +760,16 @@ async def get_chat_session(
 
     print(f"Fetching chat session for session_id: {session_id}")  # Debugging line
 
-    async with httpx2.AsyncClient(timeout=None) as client:
-        try:
-            response = await client.get(
-                f"{gateway_params['url']}/api/sessions/{session_id}/messages",
-                headers=gateway_params["headers"],
-            )
-            response.raise_for_status()
-            result = response.json()
+    messages_raw = await get_session_messages(gateway_params, session_id)
+    messages = get_formated_messages(messages_raw)
 
-            # print(f"Fetched chat session data: {result}")  # Debugging line
+    # print(f"Formatted chat session messages: {messages}")  # Debugging line
 
-            print(
-                f"Loaded chat session messages: {len(result.get('data', []))}"
-            )  # Debugging line
-
-            messages = get_formated_messages(result.get("data", []))
-
-            # print(f"Formatted chat session messages: {messages}")  # Debugging line
-
-            return templates.TemplateResponse(
-                request=request,
-                name="chat/chat_messages.html",
-                context={"messages": messages, "session_id": session_id},
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Unexpected error in get_chat_session: {str(e)}", exc_info=True
-            )
-            return templates.TemplateResponse(
-                request=request,
-                name="chat/chat_messages.html",
-                context={"messages": []},
-            )
+    return templates.TemplateResponse(
+        request=request,
+        name="chat/chat_messages.html",
+        context={"messages": messages, "session_id": session_id},
+    )
 
 
 # TODO: use this to update session titles automatically
@@ -725,56 +781,43 @@ async def generate_summary_title(
 
     print(f"Generating session title for session_id: {session_id}")  # Debugging line
 
+    messages_raw = await get_session_messages(gateway_params, session_id)
+    messages = get_formated_messages(messages_raw)
+
+    # Construct input
+    input = []
+    for msg in messages:
+        input.append({"role": msg["role"], "content": msg["content"]})
+
+    input.append({"role": "user", "content": "Génère un titre pour cette conversation"})
+
+    payload = {
+        "model": "hermes-llm",
+        "input": input,
+    }
+
     async with httpx2.AsyncClient(timeout=None) as client:
-        try:
-            response = await client.get(
-                f"{gateway_params['url']}/api/sessions/{session_id}/messages",
-                headers=gateway_params["headers"],
-            )
-            response.raise_for_status()
-            result = response.json()
-            messages = get_formated_messages(result.get("data", []))
+        response = await client.post(
+            f"{gateway_params['url']}/v1/responses",
+            headers=gateway_params["headers"],
+            json=payload,
+        )
+        response.raise_for_status()
+        result = response.json()
 
-            # Construct input
-            input = []
-            for msg in messages:
-                input.append({"role": msg["role"], "content": msg["content"]})
+        print(f"Chat response received: {result}")  # Debugging line
 
-            input.append(
-                {"role": "user", "content": "Génère un titre pour cette conversation"}
-            )
+        output = result.get("output", [])
 
-            payload = {
-                "model": "hermes-llm",
-                "input": input,
-            }
+        ai_response = ""
+        for item in output:
+            item_type = item.get("type")
+            if item_type == "message":
+                for content_part in item.get("content", []):
+                    if content_part.get("type") == "output_text":
+                        ai_response += content_part.get("text", "")
 
-            response = await client.post(
-                f"{gateway_params['url']}/v1/responses",
-                headers=gateway_params["headers"],
-                json=payload,
-            )
-            response.raise_for_status()
-            result = response.json()
-
-            print(f"Chat response received: {result}")  # Debugging line
-
-            output = result.get("output", [])
-
-            ai_response = ""
-            for item in output:
-                item_type = item.get("type")
-                if item_type == "message":
-                    for content_part in item.get("content", []):
-                        if content_part.get("type") == "output_text":
-                            ai_response += content_part.get("text", "")
-
-            print(f"Title: {ai_response}")  # Debugging line
-
-        except Exception as e:
-            logger.error(
-                f"Unexpected error in get_chat_session: {str(e)}", exc_info=True
-            )
+        print(f"Title: {ai_response}")  # Debugging line
 
 
 # Reformat the messages to include tool calls and results in a structured way.
