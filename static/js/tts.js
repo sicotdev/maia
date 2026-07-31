@@ -184,6 +184,7 @@ async function startAudioGeneration(button, messageId) {
     const text = getTextWithoutCode(document.getElementById(`message-text-${messageId}`));
     const qs = `engine=${get_setting('ttsEngine')}&voice=${get_setting('ttsVoice')}` 
             + `&message_id=${messageId}&text=${encodeURIComponent(text)}`
+            + (isReload ? '&force=true' : '')
     const url = `/v1/voice/generate?${qs}`;
     const evtSource = new EventSource(url);
 

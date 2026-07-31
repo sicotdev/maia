@@ -61,12 +61,13 @@ async def generate(
     voice: int = Query(..., ge=0),
     message_id: str = Query(..., min_length=1),
     text: str = Query(..., min_length=1),
+    force: bool = Query(False),
 ):
 
     output_file = f"{OUTPUT_DIR}/{message_id}"
 
     # We already have the output file
-    if not FORCE_RELOAD_WAV and os.path.isfile(f"{output_file}.wav"):
+    if not force and not FORCE_RELOAD_WAV and os.path.isfile(f"{output_file}.wav"):
         return Response(
             content=f"event: done\ndata: {output_file}.wav\n\n",
             media_type="text/event-stream",
