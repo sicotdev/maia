@@ -60,29 +60,38 @@
 .tooltip {
     position: absolute;
     /*bottom: calc(100% + 10px);*/
-    width: 282px;
+    width: 270px;
     background: var(--panel-color);
     border: 1px solid var(--panel-border-color);
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 10px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, .45);
     opacity: 0;
     visibility: hidden;
     transition: opacity .15s ease;
     z-index: 20;
     font-family: var(--mono);
-    font-size: 12.5px;
+    font-size: 12px;
     display: none;
 }
 
 .tooltip-header {
     display: flex;
+    flex-direction: column;
     align-items: baseline;
     justify-content: space-between;
     margin-bottom: 10px;
-    padding-bottom: 8px;
     border-bottom: 1px solid var(--panel-border-color);
 }
+
+.tooltip-actions {
+    align-self: flex-end;
+    display: flex;
+    gap: 8px;
+}
+
+.session-title-input { display: none; width: 100%; }
+.session-title-input.visible { display: block; }
 
 .tooltip-preview {
     color: var(--text-color);
@@ -92,6 +101,7 @@
     margin-bottom: 12px;
     font-style: italic;
 }
+.tooltip-preview.hidden { display: none; }
 
 .tooltip-grid {
     display: grid;

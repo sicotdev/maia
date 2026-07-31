@@ -1,11 +1,13 @@
 import httpx2
 import time
-from fastapi import APIRouter, Query, Request, Depends
+from fastapi import APIRouter, Query, Request, Depends, Form, Path, Response
 from maia.config.gateway import get_gateway_params
 from maia.config.logging_config import logger
 from maia.config.templating import templates
+from maia.routers.chat_router import generate_summary_title
 
 router = APIRouter()
+
 
 @router.get("")
 async def load_sessions(
@@ -35,6 +37,10 @@ async def load_sessions(
             now = time.time()
 
             for session in data:
+                title = session.get("title")
+                if title:
+                    session["preview"] = title
+
                 preview = session.get("preview", "").lower()
 
                 # Text filter: if filter_text exists, preview must contain it
@@ -82,42 +88,78 @@ async def load_sessions(
                 context={"result": {"data": [], "has_more": False}},
             )
 
-@router.patch("/sessions/{session_id}/title")
+
+@router.patch("/{session_id}/title")
 async def update_session_title(
-    session_id: str,
+    request: Request,
+    gateway_params: str = Depends(get_gateway_params),
+    session_id: str = Path(...),
     title: str = Form(None),
     auto: bool = Form(False),
-    gateway_params: str = Depends(get_gateway_params)
 ):
     # TODO: Implement logic to update title via gateway
-    # For now, return success
-    return templates.TemplateResponse(
-        request=request,
-        name="session/sessions.html",
-        context={"result": {"data": [], "has_more": False}},
-    )
+    print(f"Setting title to session {session_id}: {title} (auto={auto})")
 
-@router.delete("/sessions/{session_id}")
+    if auto:
+        title = await generate_summary_title(gateway_params, session_id)
+
+    print(f"Setting title: {title}")
+
+    # Call update session
+    async with httpx2.AsyncClient(timeout=None) as client:
+        response = await client.patch(
+            f"{gateway_params['url']}/api/sessions/{session_id}",
+            headers=gateway_params["headers"],
+            json={"title": title},
+        )
+        response.raise_for_status()
+        result = response.json()
+
+        # TODO: missing preview and last_active in response, we have to send only the new title instead of the whole object:
+        session = result.get("session")
+        print(session)
+
+        session["preview"] = session["title"]
+
+        return templates.TemplateResponse(
+            request=request,
+            name="session/session_oob.html",
+            context={"session": session},
+        )
+
+
+@router.delete("/{session_id}")
 async def delete_session(
-    session_id: str,
-    gateway_params: str = Depends(get_gateway_params)
+    request: Request,
+    gateway_params: str = Depends(get_gateway_params),
+    session_id: str = Path(...),
 ):
-    # TODO: Implement logic to delete session via gateway
-    return templates.TemplateResponse(
-        request=request,
-        name="session/sessions.html",
-        context={"result": {"data": [], "has_more": False}},
-    )
+    print(f"Deleting session {session_id}")
+
+    async with httpx2.AsyncClient(timeout=None) as client:
+        response = await client.delete(
+            f"{gateway_params['url']}/api/sessions/{session_id}",
+            headers=gateway_params["headers"],
+        )
+        response.raise_for_status()
+        result = response.json()
+        print(result)
+
+        # Return success
+        return Response(content="", media_type="text/html")
+
 
 @router.delete("/sessions/bulk")
 async def delete_sessions_bulk(
+    request: Request,
+    gateway_params: str = Depends(get_gateway_params),
     session_ids: str = Query(...),
-    gateway_params: str = Depends(get_gateway_params)
 ):
     # TODO: Implement logic to delete multiple sessions via gateway
     # For now, return success
-    return templates.TemplateResponse(
-        request=request,
-        name="session/sessions.html",
-        context={"result": {"data": [], "has_more": False}},
-    )
+    return Response(content="", media_type="text/html")
+    # return templates.TemplateResponse(
+    #     request=request,
+    #     name="session/sessions.html",
+    #     context={"result": {"data": [], "has_more": False}},
+    # )

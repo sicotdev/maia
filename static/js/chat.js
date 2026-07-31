@@ -119,12 +119,12 @@ function initUserInput() {
     //New line on Shift+Enter, submit on Enter
     const textarea = document.getElementById('user-input');
     textarea.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        document.querySelector('form').requestSubmit();
-        textarea.style.height = textarea.style.minHeight; // reset height after submission
-    }
-    // Shift+Enter: do nothing, let the textarea insert a newline naturally
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.querySelector('form').requestSubmit();
+            textarea.style.height = textarea.style.minHeight; // reset height after submission
+        }
+        // Shift+Enter: do nothing, let the textarea insert a newline naturally
     });
     //Auto resize the textarea based on content
     textarea.addEventListener('input', () => resizeTextarea(textarea));
@@ -136,15 +136,22 @@ function resizeTextarea(textarea) {
     textarea.style.height = textarea.scrollHeight + 'px';
 }
 
+function clearChat() {
+    document.getElementById('chat-container').innerHTML = '';
+    document.getElementById('session_id').value = '';
+    document.getElementById('previous_response_id').value = '';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
     //TMP because hx-on::oob-after-swap doesn't work
     document.body.addEventListener('htmx:oobAfterSwap', function(evt) {
         if (evt.detail.target.id === 'conversation-list') {
+            //Select the new created session
             sessionClickBeforeRequest(evt.detail.target.querySelector('li'));
         }
     });
     
     initUserInput();
 });
+

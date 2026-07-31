@@ -1,7 +1,7 @@
 {% if hx_swap %}
 <ul hx-swap-oob="afterbegin:#conversation-list">
 {% endif %}
-<li class="session-row" 
+<li class="session-row" id="session-{{ session.id }}"
     hx-on:htmx:load="onSessionLoaded(this)"
     hx-get="/chat/{{ session.id }}"
     hx-target="#chat-container"
@@ -12,12 +12,43 @@
     <input type="checkbox" class="selection-checkbox" data-session-id="{{ session.id }}">
     <div class="session-content">
         <div class="timestamp">{{ session.last_active }}</div>
-        <span class="preview">{{ session.preview }}</span>
+        <span class="preview" id="preview-{{ session.id }}">{{ session.preview }}</span>
     </div>
     
     <div class="tooltip">
         <div class="tooltip-header">
-            <div class="tooltip-preview">« {{ session.preview }} »</div>
+            
+            <div class="tooltip-actions">
+                <button class="btn btn-generate-title" 
+                    hx-vals='{"auto": true}'
+                    hx-patch="/sessions/{{ session.id }}/title"
+                    title="Générer un titre automatiquement"
+                    hx-swap="none">
+                    <i class="ti ti-wand"></i>
+                </button>
+                <button class="btn btn-edit-title"
+                    title="Modifier le titre manuellement">
+                    <i class="ti ti-pencil"></i>
+                </button>
+                <button class="btn btn-delete" 
+                    hx-delete="/sessions/{{ session.id }}" 
+                    hx-target="#session-{{ session.id }}" 
+                    hx-swap="delete"
+                    hx-confirm="Voulez-vous vraiment supprimer cette session ?"
+                    hx-on::after-request="onSessionDeleted(event, '{{ session.id }}')"
+                    title="Supprimer la session">
+                    <i class="ti ti-trash"></i>
+                </button>
+            </div>
+
+            <input type="text" class="session-title-input" id="title-input-{{ session.id }}" value="{{ session.preview }}" 
+                name="title"
+                hx-patch="/sessions/{{ session.id }}/title"
+                hx-trigger="keyup[key=='Enter']"
+                hx-swap="none"
+                >
+
+            <div class="tooltip-preview" id="tooltip-preview-{{ session.id }}">« {{ session.preview }} »</div>
         </div>
         
         <div class="tooltip-grid">
@@ -47,11 +78,6 @@
                 <span class="value warn">$ {{ session.estimated_cost_usd|default("0.0", true) }}</span>
             </div>
             
-            <div class="tooltip-actions">
-                <button hx-patch="/sessions/{{ session.id }}/title" hx-values='{"auto": true}' hx-target="#conversation-list" hx-swap="none" title="Générer un titre automatiquement">Auto titre</button>
-                <button hx-patch="/sessions/{{ session.id }}/title" hx-target="#conversation-list" hx-swap="none" title="Modifier le titre manuellement" onclick="this.setAttribute('data-title', prompt('Entrez le nouveau titre :', '{{ session.preview }}'))" hx-vals='{"title": this.getAttribute("data-title")}'>Modifier titre manuellement</button>
-                <button hx-delete="/sessions/{{ session.id }}" hx-target="#conversation-list" hx-swap="outerHTML" hx-confirm="Êtes-vous sûr de vouloir supprimer cette session ?" title="Supprimer la session">Supprimer</button>
-            </div>
         </div>
         <div class="tooltip-footer">
             <div><div>Démarré</div> <div class="timestamp">{{ session.started_at }}</div></div>

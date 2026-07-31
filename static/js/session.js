@@ -11,6 +11,14 @@ function onSessionLoaded(container) {
     handleSessionTooltip(container);
 }
 
+function onSessionDeleted(event, sessionId) {
+    if (!event.detail.successful) return;
+    
+    if (sessionId == document.getElementById('session_id').value)
+        clearChat();
+}
+
+//Select session on click
 function sessionClickBeforeRequest(session, target) {
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
     session.classList.add('selected');
@@ -32,9 +40,7 @@ function sessionClickAfterRequest() {
 }
 
 function sessionNewBtnClick() {
-    document.getElementById('chat-container').innerHTML = '';
-    document.getElementById('session_id').value = '';
-    document.getElementById('previous_response_id').value = '';
+    clearChat();
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
     showPanel('chat');
 }
@@ -50,24 +56,31 @@ function handleSessionTooltip(container) {
 
     let rowHover = false;
     let tooltipHower = false;
+    let tooltipShown = false;
 
     const onRowHover = () => {
         rowHover = true;
+        if (tooltipShown) return;
+        tooltipShown = true;
         showSessionTooltip(container, clone);
     };
     const onRowLeave = () => {
         rowHover = false;
-        if (!tooltipHower)
-            hideSessionTooltip(clone);
+        if (tooltipHower || !tooltipShown) return;
+        tooltipShown = false;
+        hideSessionTooltip(clone);
     };
     const onTooltipHover = () => {
         tooltipHower = true;
+        if (tooltipShown) return;
+        tooltipShown = true;
         showSessionTooltip(container, clone);
     };
     const onTooltipLeave = () => {
         tooltipHower = false;
-        if (!rowHover)
-            hideSessionTooltip(clone);
+        if (rowHover || !tooltipShown) return;
+        tooltipShown = false;
+        hideSessionTooltip(clone);
     };
 
     
@@ -79,13 +92,16 @@ function handleSessionTooltip(container) {
     container.addEventListener('mouseleave', onRowLeave);
     container.addEventListener('blur', onRowLeave, true); // true for capture phase
 
-    // Show on mouseenter or focus
     clone.addEventListener('mouseenter', onTooltipHover)
-    clone.addEventListener('focus', onTooltipHover, true); // true for capture phase
-
-    // Hide on mouseleave or blur
     clone.addEventListener('mouseleave', onTooltipLeave);
-    clone.addEventListener('blur', onTooltipLeave, true); // true for capture phase
+
+    //Edit button
+    const editInput = clone.querySelector('.session-title-input');
+    const preview = clone.querySelector('.tooltip-preview');
+    clone.querySelector('.btn-edit-title').addEventListener('click', () => {
+        editInput.classList.toggle('visible');
+        preview.classList.toggle('hidden');
+    });
 }
 
 function showSessionTooltip(container, tooltip) {
@@ -93,6 +109,7 @@ function showSessionTooltip(container, tooltip) {
 
     // Add tooltip to body to avoid clipping issues
     document.body.appendChild(tooltip);
+    htmx.process(tooltip);
     tooltip.style.position = 'fixed';
 
     // Check viewport bounds
@@ -109,5 +126,11 @@ function showSessionTooltip(container, tooltip) {
 }
 
 function hideSessionTooltip(tooltip) {
+
+    const editInput = tooltip.querySelector('.session-title-input');
+    const preview = tooltip.querySelector('.tooltip-preview');
+    editInput.classList.remove('visible');
+    preview.classList.remove('hidden');
+    
     tooltip.remove();
 }

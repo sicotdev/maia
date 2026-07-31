@@ -1,0 +1,16 @@
+{# ---- After renaming Session ---- #}
+<input 
+    type="text" 
+    name="title"
+    class="session-title-input"
+    id="title-input-{{ session.id }}"
+    value="{{ session.preview }}"
+    hx-patch="/sessions/{{ session.id }}/title"
+    hx-trigger="keyup[key=='Enter']"
+    hx-swap="none"
+    hx-swap-oob="true"
+>
+
+<span class="preview" id="preview-{{ session.id }}" hx-swap-oob="true">{{ session.preview }}</span>
+
+<div class="tooltip-preview" id="tooltip-preview-{{ session.id }}" hx-swap-oob="true">« {{ session.preview }} »</div>

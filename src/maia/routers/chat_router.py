@@ -3,12 +3,13 @@ import json
 import time
 import uuid
 import random
+from itertools import islice
 from typing import Any
 from html import escape
 from urllib.parse import urlencode
 from fastapi import APIRouter, Form, Query, Path, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
-from maia.config.gateway import get_gateway_params
+from maia.config.gateway import get_gateway_params, get_custom_gateway
 from maia.config.logging_config import logger
 from maia.config.templating import templates
 
@@ -121,7 +122,7 @@ async def get_session_messages(gateway_params: dict[str, Any], session_id: str):
             response.raise_for_status()
             result = response.json()
 
-            print(f"Fetched chat session data: {result}")  # Debugging line
+            # print(f"Fetched chat session data: {result}")  # Debugging line
 
             print(
                 f"Loaded chat session messages: {len(result.get('data', []))}"
@@ -332,16 +333,17 @@ async def chat_stream(
                                 <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
                                 <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
                             )
-                            print(usage)
 
                             # TODO: no tool outputs or reasoning until run.completed
                             # Parse the tools outputs
                             tool_index = 0
                             reasoning = ""
                             for item in event_data.get("messages"):
-                                msg_reasonning = item.get("reasoning")
-                                if msg_reasonning and msg_reasonning.lstrip():
-                                    reasoning += msg_reasonning
+                                msg_reasoning = item.get("reasoning")
+                                if msg_reasoning and msg_reasoning.lstrip():
+                                    # TODO: sometimes contains reasoning of previous turns
+                                    # print(msg_reasoning)
+                                    reasoning += msg_reasoning
                                     yield _sse(
                                         "reasoning",
                                         templates.get_template(
@@ -534,7 +536,6 @@ async def chat_run(
                                 <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
                                 <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
                             )
-                            print(usage)
 
                             # No delta means it's an error message
                             if not delta_received:
@@ -545,9 +546,9 @@ async def chat_run(
                             # tool_index = 0
                             # reasoning = ""
                             # for item in event_data.get("messages"):
-                            #     msg_reasonning = item.get("reasoning")
-                            #     if msg_reasonning and msg_reasonning.lstrip():
-                            #         reasoning += msg_reasonning
+                            #     msg_reasoning = item.get("reasoning")
+                            #     if msg_reasoning and msg_reasoning.lstrip():
+                            #         reasoning += msg_reasoning
                             #         yield _sse(
                             #             "reasoning",
                             #             templates.get_template(
@@ -772,11 +773,9 @@ async def get_chat_session(
     )
 
 
-# TODO: use this to update session titles automatically
-@router.get("/generate_title/{session_id}")
 async def generate_summary_title(
-    gateway_params: str = Depends(get_gateway_params),
-    session_id: str = Path(..., min_length=1),
+    gateway_params: dict[str, Any],
+    session_id: str,
 ):
 
     print(f"Generating session title for session_id: {session_id}")  # Debugging line
@@ -786,20 +785,24 @@ async def generate_summary_title(
 
     # Construct input
     input = []
-    for msg in messages:
+    for msg in islice(messages, 10):
         input.append({"role": msg["role"], "content": msg["content"]})
 
-    input.append({"role": "user", "content": "Génère un titre pour cette conversation"})
+    input.append(
+        {
+            "role": "user",
+            "content": "Génère un titre pour cette conversation de 64 caractères maximum (ton message ne doit contenir que le titre)",
+        }
+    )
 
-    payload = {
-        "model": "hermes-llm",
-        "input": input,
-    }
+    payload = {"model": "hermes-llm", "input": input, "reasoning": {"effort": "none"}}
+
+    custom_gateway = get_custom_gateway()
 
     async with httpx2.AsyncClient(timeout=None) as client:
         response = await client.post(
-            f"{gateway_params['url']}/v1/responses",
-            headers=gateway_params["headers"],
+            f"{custom_gateway['url']}/v1/responses",
+            headers=custom_gateway["headers"],
             json=payload,
         )
         response.raise_for_status()
@@ -818,6 +821,8 @@ async def generate_summary_title(
                         ai_response += content_part.get("text", "")
 
         print(f"Title: {ai_response}")  # Debugging line
+
+        return ai_response
 
 
 # Reformat the messages to include tool calls and results in a structured way.
@@ -844,7 +849,7 @@ def get_formated_messages(messages_list: list):
                 last_ai_message = {
                     "id": int(msg.get("timestamp")),
                     "role": "assistant",
-                    "reasoning": msg.get("reasoning"),
+                    "reasoning": msg.get("reasoning") or "",
                     "content": msg.get("content"),
                     "tool_steps": [],
                     "timestamp": msg.get("timestamp"),

@@ -30,3 +30,14 @@ def get_gateway_params(
         },
         "is_custom": is_custom,
     }
+
+
+def get_custom_gateway():
+    return {
+        "url": CUSTOM_URL,
+        "headers": {
+            "Authorization": f"Bearer {CUSTOM_APIKEY}",
+            "Content-Type": "application/json",
+        },
+        "is_custom": True,
+    }
