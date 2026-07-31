@@ -9,7 +9,6 @@
     hx-on::before-request="sessionClickBeforeRequest(this)"
     hx-on::after-request="sessionClickAfterRequest()"
     >
-
     <input type="checkbox" class="selection-checkbox" data-session-id="{{ session.id }}">
     <div class="session-content">
         <div class="timestamp">{{ session.last_active }}</div>
@@ -17,11 +16,10 @@
     </div>
     
     <div class="tooltip">
-
         <div class="tooltip-header">
             <div class="tooltip-preview">« {{ session.preview }} »</div>
         </div>
-
+        
         <div class="tooltip-grid">
             
             <div class="metric">
@@ -48,8 +46,13 @@
                 <span class="label">Coût estimé</span>
                 <span class="value warn">$ {{ session.estimated_cost_usd|default("0.0", true) }}</span>
             </div>
+            
+            <div class="tooltip-actions">
+                <button hx-patch="/sessions/{{ session.id }}/title" hx-values='{"auto": true}' hx-target="#conversation-list" hx-swap="none" title="Générer un titre automatiquement">Auto titre</button>
+                <button hx-patch="/sessions/{{ session.id }}/title" hx-target="#conversation-list" hx-swap="none" title="Modifier le titre manuellement" onclick="this.setAttribute('data-title', prompt('Entrez le nouveau titre :', '{{ session.preview }}'))" hx-vals='{"title": this.getAttribute("data-title")}'>Modifier titre manuellement</button>
+                <button hx-delete="/sessions/{{ session.id }}" hx-target="#conversation-list" hx-swap="outerHTML" hx-confirm="Êtes-vous sûr de vouloir supprimer cette session ?" title="Supprimer la session">Supprimer</button>
+            </div>
         </div>
-
         <div class="tooltip-footer">
             <div><div>Démarré</div> <div class="timestamp">{{ session.started_at }}</div></div>
             <div><div>Dernière activité</div> <div class="timestamp">{{ session.last_active }}</div></div>

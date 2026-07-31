@@ -7,7 +7,6 @@ from maia.config.templating import templates
 
 router = APIRouter()
 
-
 @router.get("")
 async def load_sessions(
     request: Request,
@@ -82,3 +81,43 @@ async def load_sessions(
                 name="session/sessions.html",
                 context={"result": {"data": [], "has_more": False}},
             )
+
+@router.patch("/sessions/{session_id}/title")
+async def update_session_title(
+    session_id: str,
+    title: str = Form(None),
+    auto: bool = Form(False),
+    gateway_params: str = Depends(get_gateway_params)
+):
+    # TODO: Implement logic to update title via gateway
+    # For now, return success
+    return templates.TemplateResponse(
+        request=request,
+        name="session/sessions.html",
+        context={"result": {"data": [], "has_more": False}},
+    )
+
+@router.delete("/sessions/{session_id}")
+async def delete_session(
+    session_id: str,
+    gateway_params: str = Depends(get_gateway_params)
+):
+    # TODO: Implement logic to delete session via gateway
+    return templates.TemplateResponse(
+        request=request,
+        name="session/sessions.html",
+        context={"result": {"data": [], "has_more": False}},
+    )
+
+@router.delete("/sessions/bulk")
+async def delete_sessions_bulk(
+    session_ids: str = Query(...),
+    gateway_params: str = Depends(get_gateway_params)
+):
+    # TODO: Implement logic to delete multiple sessions via gateway
+    # For now, return success
+    return templates.TemplateResponse(
+        request=request,
+        name="session/sessions.html",
+        context={"result": {"data": [], "has_more": False}},
+    )
