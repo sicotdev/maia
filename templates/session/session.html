@@ -11,9 +11,11 @@
     >
 
     <input type="checkbox" class="selection-checkbox" data-session-id="{{ session.id }}">
-    <span class="preview">{{ session.preview }}</span>
-
-
+    <div class="session-content">
+        <span class="preview">{{ session.preview }}</span>
+        <div class="timestamp">{{ session.last_active }}</div>
+    </div>
+    
     <div class="tooltip">
 
         <div class="tooltip-header">
