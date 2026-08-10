@@ -334,6 +334,11 @@ async def chat_stream(
                                 <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
                             )
 
+                            yield _sse(
+                                "context_tokens",
+                                f"<input type='hidden' id='context_tokens' value='{usage['input_tokens']}'>",
+                            )
+
                             # TODO: no tool outputs or reasoning until run.completed
                             # Parse the tools outputs
                             tool_index = 0
@@ -537,6 +542,13 @@ async def chat_run(
                                 <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
                             )
 
+                            print(f"context : {usage['input_tokens']}")
+
+                            yield _sse(
+                                "context_tokens",
+                                f"<input type='hidden' id='context_tokens' value='{usage['input_tokens']}'>",
+                            )
+
                             # No delta means it's an error message
                             if not delta_received:
                                 print(escape(event_data.get("output")))
@@ -723,6 +735,7 @@ async def get_response(
                             "reasoning": reasoning,
                             "tool_steps": tool_steps,
                             "content": ai_response,
+                            "context_tokens": result.get("usage").get("input_tokens"),
                         },
                     ],
                 },

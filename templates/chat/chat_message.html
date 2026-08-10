@@ -1,4 +1,8 @@
-<div class="message role-{{ msg.role }}">
+<div class="message role-{{ msg.role }}" 
+    {% if msg.context_tokens %}
+        data-context-tokens="{{ msg.context_tokens}}"
+    {% endif %}
+    >
 
     <div class="message-header">
         {% if msg.timestamp %}<span class="timestamp">{{ msg.timestamp }}</span>{% endif %}

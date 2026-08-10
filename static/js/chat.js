@@ -29,6 +29,7 @@ function userInputAfterRequest(event) {
     if (!aiMessage.classList.contains('message-stream')) {
         
         //Not streaming, we can process the answer
+        formatTimestamps(aiMessage);
         const aiText = aiMessage.querySelector('.message-text');
         parseMd(aiText, aiText.textContent);
 
@@ -42,6 +43,9 @@ function userInputAfterRequest(event) {
 
         //Re-enable buttons and textarea
         document.querySelectorAll('#chat-form button, #chat-form textarea').forEach(elem => elem.disabled = false);
+
+        //Update context tokens
+        updateContextTokens(aiMessage.dataset.contextTokens);
     }
 }
 
@@ -110,8 +114,18 @@ function onChatStreamEnd(message, tmp_id) {
         endAudioGeneration(audioContainer.querySelector('button'), tmp_id, messageId);
     
     audioContainer.classList.add("visible");
+
+    //Update context tokens
+    const inputContext = message.querySelector('#context_tokens');
+    updateContextTokens(inputContext.value);
+    inputContext.remove();
 }
 
+function updateContextTokens(tokenCount) {
+    const container = document.getElementById('chat-container');
+    const contextTokens = container.nextElementSibling.querySelector('.context-tokens');
+    contextTokens.querySelector('span').textContent = tokenCount;
+}
 
 //Init user textarea input
 function initUserInput() {
