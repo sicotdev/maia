@@ -1,4 +1,3 @@
-import re
 import torch
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -51,19 +50,7 @@ def generate(req: TranscribeRequest):
             mode="intended",  # Intended: the clean, readable version
         )
 
-        print(clean)
-
-        # full_text = ""
-        # for seg in segments:
-        #     # Filter based on probabilities (similar to faster-whisper logic)
-        #     # CrisperWhisper segments usually have a confidence/probability score
-        #     if hasattr(seg, 'confidence') and seg.confidence < 0.5:
-        #         continue
-
-        #     if is_known_hallucination(seg.text):
-        #         continue
-
-        #     full_text += seg.text + " "
+        #print(clean)
 
         return {"text": clean.text.strip()}
 
