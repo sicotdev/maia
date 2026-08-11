@@ -74,11 +74,7 @@ async def load_sessions(
             return templates.TemplateResponse(
                 request=request,
                 name="session/sessions.html",
-                context={
-                    "result": result,
-                    "filter_text": filter_text,
-                    "filter_date": filter_date,
-                },
+                context={"result": result},
             )
         except Exception as e:
             logger.error(f"Unexpected error in load_sessions: {str(e)}", exc_info=True)
@@ -97,7 +93,6 @@ async def update_session_title(
     title: str = Form(None),
     auto: bool = Form(False),
 ):
-    # TODO: Implement logic to update title via gateway
     print(f"Setting title to session {session_id}: {title} (auto={auto})")
 
     if auto:

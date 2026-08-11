@@ -112,7 +112,7 @@ details .details-body {
 }
 .details-body:not(.details-body .details-body){
     word-break: break-word;
-    max-height: 200px;
+    max-height: 100px;
     overflow: auto;
 }
 
@@ -121,7 +121,7 @@ details .details-body {
 .fn-args { color: var(--text-dim); }
 .fn-output {
     display: block;
-    max-height: 200px;
+    max-height: 100px;
     overflow-y: auto;
 }
 
