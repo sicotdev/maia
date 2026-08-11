@@ -55,11 +55,11 @@ async def load_sessions(
                         is_in_range = False
 
                         if filter_date == "j1":
-                            is_in_range = now - 86400 <= ts <= now
+                            is_in_range = ts <= (now - 86400)
                         elif filter_date == "j7":
-                            is_in_range = now - 604800 <= ts <= now
+                            is_in_range = ts <= (now - 604800)
                         elif filter_date == "j30":
-                            is_in_range = now - 2592000 <= ts <= now
+                            is_in_range = ts <= (now - 2592000)
 
                         if not is_in_range:
                             continue
