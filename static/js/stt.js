@@ -26,6 +26,7 @@ async function startVoiceCall() {
 
     const chatForm = document.getElementById('chat-form');
     chatForm.classList.add('hidden');
+    chatForm.querySelector('#is_voicecall').value = "true";
 
     document.getElementById('user-input').value = '';
 
@@ -78,6 +79,7 @@ async function startVoiceCall() {
 
     voiceCallContainer.classList.remove('visible');
     chatForm.classList.remove('hidden');
+    chatForm.querySelector('#is_voicecall').value = "false";
     voiceButtons.forEach((elem) => {elem.classList.remove('active');} );
 
     startVoiceCallBtn.innerHTML = "Démarrer l'appel";

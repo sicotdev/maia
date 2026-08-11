@@ -24,7 +24,7 @@ try:
     model = CrisperWhisperModel(
         "small",
         backend="transformers",
-        device="DEVICE",
+        device=DEVICE,
     )  # )  # nyralabs/CrisperWhisper2.0_large
     # or pick a size: CrisperWhisperModel("turbo")  # turbo / medium / small
 
@@ -50,7 +50,7 @@ def generate(req: TranscribeRequest):
             mode="intended",  # Intended: the clean, readable version
         )
 
-        #print(clean)
+        # print(clean)
 
         return {"text": clean.text.strip()}
 

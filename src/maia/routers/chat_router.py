@@ -149,7 +149,7 @@ async def chat_start(
     is_voicecall: bool = Form(False),
 ):
 
-    # Call normal v1/response with previous_response_id
+    # Call normal v1/response with previous_response_id, with no session save
     if gateway_params["is_custom"]:
         return await get_response(
             request, gateway_params, message, previous_response_id, is_voicecall
@@ -171,7 +171,7 @@ async def chat_start(
     # print(f"new session: {session}")
 
     # Create a run
-    # TODO: doesn't work for now
+    # TODO: doesn't work for now as the session history is lost (see https://github.com/NousResearch/hermes-agent/pull/62750)
     # run = await create_run(gateway_params, message, session_id)
     # print(run)
     # run_id = run.get("run_id")
@@ -191,7 +191,7 @@ async def chat_start(
     qs = urlencode({"message": message, "session_id": session_id})
     sse_url = f"/chat/stream?{qs}"
 
-    # Generate a unique message id
+    # Generate a tmp unique message id for audio chunks
     message_id = uuid.uuid4().hex
 
     return templates.TemplateResponse(
