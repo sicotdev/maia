@@ -149,17 +149,11 @@ async def chat_start(
     is_voicecall: bool = Form(False),
 ):
 
-    # Call normal v1/response with previous_response_id, with no session save
-    if gateway_params["is_custom"]:
-        return await get_response(
-            request, gateway_params, message, previous_response_id, is_voicecall
-        )
-
     session = None
     hx_swap = False
 
     # We need to create the session
-    if not session_id:
+    if not session_id and not gateway_params["is_custom"]:
         hx_swap = True
         session = await create_session(gateway_params)
         session_id = session["id"]
@@ -188,7 +182,16 @@ async def chat_start(
     #     data = resp.json()
     #     print(data)
 
-    qs = urlencode({"message": message, "session_id": session_id})
+    params = {
+        "message": message,
+        "is_voicecall": is_voicecall,
+    }
+    if previous_response_id:
+        params["previous_response_id"] = previous_response_id
+    if session_id:
+        params["session_id"] = session_id
+
+    qs = urlencode(params)
     sse_url = f"/chat/stream?{qs}"
 
     # Generate a tmp unique message id for audio chunks
@@ -212,13 +215,36 @@ async def chat_start(
     )
 
 
-# Stream using /api/sessions/
+# Stream ai response
 @router.get("/stream")
 async def chat_stream(
     gateway_params: str = Depends(get_gateway_params),
     message: str = Query(..., min_length=1),
-    session_id: str = Query(..., min_length=1),
+    session_id: str = Query(None),
+    previous_response_id: str = Query(None),
+    is_voicecall: bool = Query(False),
 ):
+    payload = {
+        "model": "hermes-llm",
+        "input": message,
+        "store": True,  # request to keep the conversation history with previous_response_id
+        "stream": True,
+    }
+    if previous_response_id:
+        payload["previous_response_id"] = previous_response_id
+
+    # Phone call instructions
+    if is_voicecall:
+        payload["instructions"] = (
+            "This is a phone call in french, keep your response short and casual. You're a woman, User is a man."
+        )
+        payload["reasoning"] = {"effort": "none"}
+
+    # Call normal v1/response with previous_response_id, with no session save
+    if gateway_params["is_custom"]:
+        url = "v1/responses"
+    else:
+        url = f"api/sessions/{session_id}/chat/stream"
 
     async def event_generator():
 
@@ -227,8 +253,8 @@ async def chat_stream(
                 startTime = time.time()
                 async with client.stream(
                     "POST",
-                    f"{gateway_params['url']}/api/sessions/{session_id}/chat/stream",
-                    json={"input": message},
+                    f"{gateway_params['url']}/{url}",
+                    json=payload,
                     headers=gateway_params["headers"],
                 ) as response:
                     if response.status_code >= 400:
@@ -247,7 +273,7 @@ async def chat_stream(
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
-                        # print(f"{raw_line}")  # Debugging line
+                        print(f"{raw_line}")  # Debugging line
 
                         if line.startswith("event:"):
                             current_event = line[len("event:") :].strip()
@@ -268,18 +294,20 @@ async def chat_stream(
                             # been reconstructed from the progressive events.
                             continue
 
+                        # TODO: do we want this? (hermes not giving it for now)
+                        # response.reasoning_text.delta
+
                         # if current_event == "run.started":
                         if current_event == "message.started":
                             # Started received
                             print("stream started")
-                            started = True
                             # print(event_data);
                             continue
 
                         # Send first_event after message.started received
-                        if started:
+                        if not started:
                             yield _sse("first_event", "<span class='spinner'></span>")
-                            started = False
+                            started = True
 
                         if current_event == "tool.started":
                             yield _sse(
@@ -311,22 +339,44 @@ async def chat_stream(
                         #         })
                         #     )
 
-                        elif current_event == "assistant.delta":
+                        elif (
+                            current_event == "assistant.delta"
+                            or current_event == "response.output_text.delta"
+                        ):
                             delta = event_data.get("delta", "")
                             if delta:
                                 delta_received = True
                                 yield _sse("text_delta", escape(delta))
 
                         elif current_event == "assistant.completed":
-                            # store the timestamp as id
-                            message_id = int(event_data.get("ts"))
                             # No delta means it's an error message
                             if not delta_received:
                                 print(escape(event_data.get("content")))
 
-                        elif current_event == "run.completed":
-                            timestamp = event_data.get("ts")
-                            usage = event_data.get("usage")
+                        elif current_event == "response.reasoning_text.done":
+                            reasoning = event_data.get("text")
+                            yield _sse(
+                                "reasoning",
+                                templates.get_template(
+                                    "chat/parts/chat_reasoning.html"
+                                ).render({"msg": {"reasoning": reasoning}}),
+                            )
+
+                        elif (
+                            current_event == "run.completed"
+                            or current_event == "response.completed"
+                        ):
+                            if current_event == "response.completed":
+                                response = event_data.get("response")
+                                timestamp = response.get("completed_at")
+                                usage = response.get("usage")
+                                response_id = response.get("id")
+                            else:
+                                timestamp = event_data.get("ts")
+                                usage = event_data.get("usage")
+                            # store the timestamp as id
+                            message_id = int(timestamp)
+
                             yield _sse(
                                 "message-header",
                                 f"""<span class='timestamp'>{timestamp}</span>
@@ -343,7 +393,7 @@ async def chat_stream(
                             # Parse the tools outputs
                             tool_index = 0
                             reasoning = ""
-                            for item in event_data.get("messages"):
+                            for item in event_data.get("messages", []):
                                 msg_reasoning = item.get("reasoning")
                                 if msg_reasoning and msg_reasoning.lstrip():
                                     # TODO: sometimes contains reasoning of previous turns
@@ -353,13 +403,7 @@ async def chat_stream(
                                         "reasoning",
                                         templates.get_template(
                                             "chat/parts/chat_reasoning.html"
-                                        ).render(
-                                            {
-                                                "msg": {
-                                                    "reasoning": reasoning,
-                                                }
-                                            }
-                                        ),
+                                        ).render({"msg": {"reasoning": reasoning}}),
                                     )
 
                                 if item.get("role") == "tool":
@@ -379,6 +423,8 @@ async def chat_stream(
                                     )
                                     tool_index += 1
 
+                            break
+
                         elif current_event == "done":
                             print("stream done")
                             break
@@ -388,6 +434,12 @@ async def chat_stream(
                         "message_id",
                         f"<input type='hidden' id='real_message_id' value='{message_id}'>",
                     )
+
+                    if response_id:
+                        yield _sse(
+                            "response_id",
+                            f"<input type='hidden' id='response_id' value='{response_id}'>",
+                        )
 
                     # yield audio container with message_id
                     yield _sse(

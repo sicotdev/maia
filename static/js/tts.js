@@ -84,8 +84,10 @@ async function requestChunk(messageId, chunkToSpeak, chunkIndex) {
 }
 
 function endAudioGeneration(button, tmp_id, messageId) {
-    button.remove();
-    generateAllChunks(tmp_id, messageId);
+    if (button) {
+        button.remove();
+        generateAllChunks(tmp_id, messageId);
+    }
 }
 
 async function generateAllChunks(tmp_id, messageId) {

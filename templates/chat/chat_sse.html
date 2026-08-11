@@ -14,6 +14,7 @@
     >
 
     <input type="hidden" id="real_message_id" sse-swap="message_id" hx-swap="outerHTML">
+    <input type="hidden" id="response_id" sse-swap="response_id" hx-swap="outerHTML">
     <input type="hidden" id="context_tokens" sse-swap="context_tokens" hx-swap="outerHTML">
 
     <div class="message-header" sse-swap="message-header" hx-on::after-swap="formatTimestamps(this)"></div>

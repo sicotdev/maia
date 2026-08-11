@@ -103,10 +103,16 @@ function onChatStreamEnd(message, tmp_id) {
     }
 
     //Update message id
-    const input = message.querySelector('#real_message_id');
-    const messageId = input.value; 
+    const inputMessageId = message.querySelector('#real_message_id');
+    const messageId = inputMessageId.value; 
     document.getElementById(`message-text-${tmp_id}`).id = `message-text-${messageId}`;
-    input.remove();
+    inputMessageId.remove();
+
+    //Update previous_response_id
+    const inputResponseId = message.querySelector('#response_id');
+    const responseId = inputResponseId.value; 
+    document.getElementById(`previous_response_id`).value = responseId;
+    inputResponseId.remove();
 
     //Audio
     const audioContainer = message.querySelector(".audio-container");
