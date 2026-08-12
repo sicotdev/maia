@@ -28,7 +28,6 @@
         <button id="btn-delete-selected" class="btn-danger" title="Supprimer la sélection"
                 hx-delete="/sessions/batch-delete"
                 hx-include="input[name='session_ids']"
-                hx-target="#conversation-list"
                 hx-confirm="Voulez-vous vraiment supprimer ces sessions ?"
                 hx-on::after-request="onSessionsDeleted(event)"
                 >

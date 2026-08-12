@@ -269,11 +269,12 @@ async def chat_stream(
                     tool_index = 0
                     started = False
                     message_id = 0
+                    response_id = None
                     delta_received = False
                     async for raw_line in response.aiter_lines():
                         line = raw_line.strip("\n")
 
-                        print(f"{raw_line}")  # Debugging line
+                        # print(f"{raw_line}")  # Debugging line
 
                         if line.startswith("event:"):
                             current_event = line[len("event:") :].strip()

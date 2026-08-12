@@ -123,9 +123,18 @@ async def update_session_title(
         )
 
 
+@router.delete("/batch-delete")
+async def delete_sessions_bulk(
+    gateway_params: str = Depends(get_gateway_params),
+    session_ids: str = Query(...),
+):
+    # TODO: Implement logic to delete multiple sessions via gateway
+    # For now, return success
+    return Response(content="", media_type="text/html")
+
+
 @router.delete("/{session_id}")
 async def delete_session(
-    request: Request,
     gateway_params: str = Depends(get_gateway_params),
     session_id: str = Path(...),
 ):
@@ -142,14 +151,3 @@ async def delete_session(
 
         # Return success
         return Response(content="", media_type="text/html")
-
-
-@router.delete("/batch-delete")
-async def delete_sessions_bulk(
-    request: Request,
-    gateway_params: str = Depends(get_gateway_params),
-    session_ids: str = Query(...),
-):
-    # TODO: Implement logic to delete multiple sessions via gateway
-    # For now, return success
-    return Response(content="", media_type="text/html")
