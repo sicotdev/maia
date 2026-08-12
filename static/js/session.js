@@ -21,7 +21,15 @@ function onSessionDeleted(event, sessionId) {
 function onSessionsDeleted(event) {
     if (!event.detail.successful) return;
     
-    //TODO: get input[name='session_ids'] to remove sessions from DOM
+    const idsToDelete = event.detail.ids;
+    if (!idsToDelete || !Array.isArray(idsToDelete)) return;
+
+    document.querySelectorAll('.session-row').forEach(el => {
+        const id = el.id;
+        if (idsToDelete.includes(id)) {
+            el.remove();
+        }
+    });
 }
 
 //Select session on click
@@ -50,7 +58,6 @@ function sessionNewBtnClick() {
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));
     showPanel('chat');
 }
-
 
 function handleSessionTooltip(container) {
     const tooltip = container.querySelector('.tooltip');
@@ -89,7 +96,6 @@ function handleSessionTooltip(container) {
         hideSessionTooltip(clone);
     };
 
-    
     // Show on mouseenter or focus
     container.addEventListener('mouseenter', onRowHover)
     container.addEventListener('focus', onRowHover, true); // true for capture phase
@@ -132,7 +138,6 @@ function showSessionTooltip(container, tooltip) {
 }
 
 function hideSessionTooltip(tooltip) {
-
     const editInput = tooltip.querySelector('.session-title-input');
     const preview = tooltip.querySelector('.tooltip-preview');
     editInput.classList.remove('visible');
