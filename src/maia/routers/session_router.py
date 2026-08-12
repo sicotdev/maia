@@ -144,7 +144,7 @@ async def delete_session(
         return Response(content="", media_type="text/html")
 
 
-@router.delete("/sessions/bulk")
+@router.delete("/batch-delete")
 async def delete_sessions_bulk(
     request: Request,
     gateway_params: str = Depends(get_gateway_params),
@@ -153,8 +153,3 @@ async def delete_sessions_bulk(
     # TODO: Implement logic to delete multiple sessions via gateway
     # For now, return success
     return Response(content="", media_type="text/html")
-    # return templates.TemplateResponse(
-    #     request=request,
-    #     name="session/sessions.html",
-    #     context={"result": {"data": [], "has_more": False}},
-    # )

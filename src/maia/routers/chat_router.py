@@ -295,6 +295,7 @@ async def chat_stream(
                             continue
 
                         # TODO: do we want this? (hermes not giving it for now)
+                        # Could use the same logic as answer_raw
                         # response.reasoning_text.delta
 
                         # if current_event == "run.started":

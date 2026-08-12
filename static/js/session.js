@@ -18,6 +18,12 @@ function onSessionDeleted(event, sessionId) {
         clearChat();
 }
 
+function onSessionsDeleted(event) {
+    if (!event.detail.successful) return;
+    
+    //TODO: get input[name='session_ids'] to remove sessions from DOM
+}
+
 //Select session on click
 function sessionClickBeforeRequest(session, target) {
     document.querySelectorAll('.session-row').forEach(el => el.classList.remove('selected'));

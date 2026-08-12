@@ -10,7 +10,7 @@
     hx-on::before-request="sessionClickBeforeRequest(this)"
     hx-on::after-request="sessionClickAfterRequest()"
     >
-    <input type="checkbox" class="selection-checkbox" data-session-id="{{ session.id }}">
+    <input type="checkbox" class="selection-checkbox" name="session_ids" value="{{ session.id }}">
     <div class="session-content">
         <div class="timestamp">{{ session.last_active }}</div>
         <span class="preview" id="preview-{{ session.id }}">{{ session.preview }}</span>
