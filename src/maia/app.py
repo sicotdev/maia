@@ -7,6 +7,8 @@ from fastapi.staticfiles import StaticFiles
 
 from maia.routers._main_router import main_router
 
+DEFAULT_PORT = 8645
+
 # Launch app
 app = FastAPI(title="Maia Gateway")
 
@@ -23,7 +25,9 @@ def main():
 
     # Parse arguments for host, port, and reload
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8645)))
+    parser.add_argument(
+        "--port", type=int, default=int(os.environ.get("PORT", DEFAULT_PORT))
+    )
     parser.add_argument("--host", type=str, default=os.environ.get("HOST", "0.0.0.0"))
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()

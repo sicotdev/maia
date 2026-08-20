@@ -268,6 +268,7 @@ async def chat_stream(
                     current_event = None
                     tool_index = 0
                     started = False
+                    first_event = False
                     message_id = 0
                     response_id = None
                     delta_received = False
@@ -306,10 +307,21 @@ async def chat_stream(
                             # print(event_data);
                             continue
 
-                        # Send first_event after message.started received
+                        # First event received
                         if not started:
-                            yield _sse("first_event", "<span class='spinner'></span>")
+                            print("first_event")
+                            # response.created or run.started
+                            print(f"{current_event} : {event_data}")
                             started = True
+                            continue
+
+                        # Fire first event only after really started
+                        if not first_event:
+                            if current_event == "response.in_progress":
+                                continue
+                            first_event = True
+                            print(f"{current_event} : {event_data}")
+                            yield _sse("first_event", "<span class='spinner'></span>")
 
                         if current_event == "tool.started":
                             yield _sse(
@@ -425,6 +437,7 @@ async def chat_stream(
                                     )
                                     tool_index += 1
 
+                            print("stream done")
                             break
 
                         elif current_event == "done":

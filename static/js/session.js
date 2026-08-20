@@ -21,6 +21,7 @@ function onSessionDeleted(event, sessionId) {
 function onSessionsDeleted(event) {
     if (!event.detail.successful) return;
     
+    console.log(event.detail);
     const idsToDelete = event.detail.ids;
     if (!idsToDelete || !Array.isArray(idsToDelete)) return;
 

@@ -83,7 +83,10 @@ function onChatStreamEnd(message, tmp_id) {
     if (!answerRaw)
         return; // it means we changed tab and removed the node
     answerRaw.remove();
-    message.querySelector('.spinner').remove();
+    const spinner = message.querySelector('.spinner')
+    if (!spinner)
+        return; // it means we changed tab and removed the node
+    spinner.remove();
     
     //Regroup tool calls
     const toolContainer = message.querySelector('.tools-container');
