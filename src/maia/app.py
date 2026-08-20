@@ -1,10 +1,11 @@
-import uvicorn
-import os
 import argparse
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from maia.routers._main_router import main_router
 
+from maia.routers._main_router import main_router
 
 # Launch app
 app = FastAPI(title="Maia Gateway")
