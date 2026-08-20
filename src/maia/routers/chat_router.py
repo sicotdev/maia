@@ -476,11 +476,6 @@ async def chat_stream(
                 exc_info=True,
             )
             yield _sse_error()
-        except Exception as e:
-            logger.error(
-                f"Unexpected error in chat_stream router: {str(e)}", exc_info=True
-            )
-            yield _sse_error()
 
     return StreamingResponse(
         event_generator(),

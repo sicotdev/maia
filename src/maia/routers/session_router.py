@@ -78,8 +78,11 @@ async def load_sessions(
                 name="session/sessions.html",
                 context={"result": result},
             )
-        except Exception as e:
-            logger.error(f"Unexpected error in load_sessions: {str(e)}", exc_info=True)
+        except httpx2.HTTPStatusError as e:
+            logger.error(
+                f"load_sessions HTTP Error: {e.response.status_code} - {e.response.text}",
+                exc_info=True,
+            )
             return templates.TemplateResponse(
                 request=request,
                 name="session/sessions.html",
