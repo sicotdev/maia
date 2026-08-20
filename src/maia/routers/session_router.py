@@ -143,15 +143,16 @@ async def _delete_session_api(
 @router.delete("/batch-delete")
 async def delete_sessions_bulk(
     gateway_params: str = Depends(get_gateway_params),
-    session_ids: str = Query(...),
+    session_ids: list[str] = Query(...),
 ):
     print(f"Deleting sessions: {session_ids}")
-    ids = [s.strip() for s in session_ids.split(",") if s.strip()]
-
-    for sid in ids:
+    deleted_ids = []
+    for sid in session_ids:
         await _delete_session_api(gateway_params, sid)
+        deleted_ids.append(sid)
 
-    return Response(content="", media_type="text/html")
+    from fastapi.responses import JSONResponse
+    return JSONResponse(content={"successful": True, "ids": deleted_ids})
 
 
 @router.delete("/{session_id}")
