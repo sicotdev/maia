@@ -31,8 +31,9 @@
                 hx-swap="none"
                 hx-confirm="Voulez-vous vraiment supprimer ces sessions ?"
                 hx-on::after-request="onSessionsDeleted(event)"
-                >
-            Supprimer la sélection
+                hx-indicator="#loading-spinner">
+            <span class="btn-text">Supprimer la sélection</span>
+            <span id="loading-spinner" class="htmx-indicator"><i class="ti ti-spinner animate-spin"></i> Chargement...</span>
         </button>
     </div>
 </div>
