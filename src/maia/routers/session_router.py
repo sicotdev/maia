@@ -8,7 +8,6 @@ from maia.routers.chat_router import generate_summary_title
 
 router = APIRouter()
 
-
 @router.get("")
 async def load_sessions(
     request: Request,
@@ -84,7 +83,6 @@ async def load_sessions(
                 context={"result": {"data": [], "has_more": False}},
             )
 
-
 @router.patch("/{session_id}/title")
 async def update_session_title(
     request: Request,
@@ -122,24 +120,8 @@ async def update_session_title(
             context={"session": session},
         )
 
-
-@router.delete("/batch-delete")
-async def delete_sessions_bulk(
-    gateway_params: str = Depends(get_gateway_params),
-    session_ids: str = Query(...),
-):
-    # TODO: Implement logic to delete multiple sessions via gateway
-    # For now, return success
-    return Response(content="", media_type="text/html")
-
-
-@router.delete("/{session_id}")
-async def delete_session(
-    gateway_params: str = Depends(get_gateway_params),
-    session_id: str = Path(...),
-):
+async def _delete_session_api(gateway_params: str = Depends(get_gateway_params), session_id: str = Path(...)):
     print(f"Deleting session {session_id}")
-
     async with httpx2.AsyncClient(timeout=None) as client:
         response = await client.delete(
             f"{gateway_params['url']}/api/sessions/{session_id}",
@@ -148,6 +130,24 @@ async def delete_session(
         response.raise_for_status()
         result = response.json()
         print(result)
+    return Response(content="", media_type="text/html")
 
-        # Return success
-        return Response(content="", media_type="text/html")
+@router.delete("/batch-delete")
+async def delete_sessions_bulk(
+    gateway_params: str = Depends(get_gateway_params),
+    session_ids: str = Query(...),
+):
+    print(f"Deleting sessions: {session_ids}")
+    ids = [s.strip() for s in session_ids.split(",") if s.strip()]
+    
+    for sid in ids:
+        await _delete_session_api(gateway_params, sid)
+        
+    return Response(content="", media_type="text/html")
+
+@router.delete("/{session_id}")
+async def delete_session(
+    gateway_params: str = Depends(get_gateway_params),
+    session_id: str = Path(...),
+):
+    return await _delete_session_api(gateway_params, session_id)
