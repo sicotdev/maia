@@ -21,16 +21,33 @@ function onSessionDeleted(event, sessionId) {
 function onSessionsDeleted(event) {
     if (!event.detail.successful) return;
     
-    console.log(event.detail);
-    const idsToDelete = event.detail.ids;
-    if (!idsToDelete || !Array.isArray(idsToDelete)) return;
+    //console.log(event.detail);
 
-    document.querySelectorAll('.session-row').forEach(el => {
-        const id = el.id;
-        if (idsToDelete.includes(id)) {
-            el.remove();
-        }
-    });
+    const rawResponse = event.detail.xhr && event.detail.xhr.responseText;
+    if (!rawResponse) return;
+
+    try {
+        const response = JSON.parse(rawResponse);
+        if (!response.successful) return;
+
+        console.log("Response JSON parsed:", response);
+        const idsToDelete = response.ids;
+
+        if (!idsToDelete || !Array.isArray(idsToDelete)) return;
+
+        const currSessionId = document.getElementById('session_id').value;
+        document.querySelectorAll('.session-row').forEach(el => {
+            const sessionId = el.id.substring("session-".length);
+            if (idsToDelete.includes(sessionId)) {
+                el.remove();
+                if (sessionId == currSessionId)
+                    clearChat();
+            }
+        });
+    }
+    catch (e) {
+        console.error("Error parsing JSON response", e);
+    }
 }
 
 //Select session on click
