@@ -2,6 +2,7 @@ import time
 
 import httpx2
 from fastapi import APIRouter, Depends, Form, Path, Query, Request, Response
+from fastapi.responses import JSONResponse
 
 from maia.config.gateway import get_gateway_params
 from maia.config.logging_config import logger
@@ -154,7 +155,6 @@ async def delete_sessions_bulk(
         await _delete_session_api(gateway_params, sid)
         deleted_ids.append(sid)
 
-    from fastapi.responses import JSONResponse
     return JSONResponse(content={"successful": True, "ids": deleted_ids})
 
 

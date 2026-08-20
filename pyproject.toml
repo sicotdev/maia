@@ -30,3 +30,6 @@ build-backend = "hatchling.build"
 
 [tool.deptry]
 ignore = ["python-dotenv", "maia"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Query", "Query"]
