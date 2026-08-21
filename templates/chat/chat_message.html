@@ -17,7 +17,7 @@
     <div class="tools-container">
         {% if msg.tool_steps %}
         <details class="tool-steps">
-            <summary>tool calls ({{ msg.tool_steps|length }})</summary>
+            <summary>Outils utilisés ({{ msg.tool_steps|length }})</summary>
             {% for call in msg.tool_steps %}
                 {% include "chat/parts/chat_tool_call.html" %}
             {% endfor %}

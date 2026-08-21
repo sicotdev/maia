@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from maia.config.gateway import get_custom_gateway, get_gateway_params
 from maia.config.logging_config import logger
 from maia.config.templating import templates
+from maia.config.tool_descriptions import get_tool_description
 
 MAX_GIF_NUMBER = 17
 
@@ -326,6 +327,9 @@ async def chat_stream(
                             yield _sse("first_event", "<span class='spinner'></span>")
 
                         if current_event == "tool.started":
+                            tool_name = event_data.get("tool_name")
+                            tool_args = event_data.get("args") or ""
+                            tool_hr = get_tool_description(tool_name, tool_args)
                             yield _sse(
                                 "tool_call",
                                 templates.get_template(
@@ -333,9 +337,10 @@ async def chat_stream(
                                 ).render(
                                     {
                                         "call": {
-                                            "name": event_data.get("tool_name"),
-                                            "arguments": event_data.get("args") or "",
+                                            "name": tool_name,
+                                            "arguments": tool_args,
                                             "output": "",
+                                            "human_readable": tool_hr,
                                         },
                                         "sse_swap": f"tool_call_{tool_index}",
                                     }
@@ -485,6 +490,7 @@ async def chat_stream(
     )
 
 
+# TODO: merge this code with default stream (so it works for any api)
 # Stream using /v1/runs/
 @router.get("/run")
 async def chat_run(
@@ -738,31 +744,13 @@ async def get_response(
 
             output = result.get("output", [])
 
-            tool_steps = []
             ai_response = ""
             reasoning = ""
 
             for item in output:
                 item_type = item.get("type")
 
-                if item_type == "function_call":
-                    tool_steps.append(
-                        {
-                            "type": "tool_call",
-                            "name": item.get("name"),
-                            "arguments": item.get("arguments"),
-                            # "call_id": item.get("call_id"),
-                        }
-                    )
-                elif item_type == "function_call_output":
-                    tool_steps.append(
-                        {
-                            "type": "tool_result",
-                            # "call_id": item.get("call_id"),
-                            "output": item.get("output"),
-                        }
-                    )
-                elif item_type == "message":
+                if item_type == "message":
                     for content_part in item.get("content", []):
                         if content_part.get("type") == "output_text":
                             ai_response += content_part.get("text", "")
@@ -787,7 +775,6 @@ async def get_response(
                             "role": "assistant",
                             "timestamp": result.get("completed_at"),
                             "reasoning": reasoning,
-                            "tool_steps": tool_steps,
                             "content": ai_response,
                             "usage": result.get("usage"),
                             "elapsed_time": int(result.get("completed_at") - startTime),
@@ -920,11 +907,15 @@ def get_formated_messages(messages_list: list):
                     last_ai_message["content"] += msg.get("content")
             if msg.get("tool_calls") is not None:
                 for tool_call in msg.get("tool_calls"):
+                    tool_name = tool_call.get("function", {}).get("name")
+                    tool_args = tool_call.get("function", {}).get("arguments")
+                    tool_hr = get_tool_description(tool_name, tool_args)
                     last_ai_message["tool_steps"].append(
                         {
                             "type": "tool_call",
-                            "name": tool_call.get("function", {}).get("name"),
-                            "arguments": tool_call.get("function", {}).get("arguments"),
+                            "name": tool_name,
+                            "arguments": tool_args,
+                            "human_readable": tool_hr,
                         }
                     )
 

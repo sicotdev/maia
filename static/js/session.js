@@ -67,6 +67,8 @@ function sessionClickBeforeRequest(session, target) {
 function sessionClickAfterRequest() {
     const container = document.getElementById('chat-container');
 
+    applyDeveloperMode(container);
+
     //Format timestamps and markdown in chat
     formatTimestamps(container);
 

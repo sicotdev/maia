@@ -66,6 +66,10 @@ function onChatStreamDelta(rawAnswer, messageId) {
     }
 }
 
+function onToolUsed(container) {
+    applyDeveloperMode(container);
+}
+
 function onChatStreamEnd(message, tmp_id) {
 
     //Make sure the function is called once (solve bug when the chat is cleared)
@@ -96,7 +100,7 @@ function onChatStreamEnd(message, tmp_id) {
         stepContainer.className = "tool-steps";
         
         const summary = document.createElement("summary");
-        summary.textContent = `tool calls (${toolElems.length})`;
+        summary.textContent = `Outils utilisés (${toolElems.length})`;
         
         stepContainer.appendChild(summary);
         toolElems.forEach((toolElem) => stepContainer.appendChild(toolElem));
@@ -164,7 +168,9 @@ function updateSessionAfterMessage() {
             values: { last_active: Date.now() / 1000 },
             target: '#session-' + session_id,
             swap: 'outerHTML'
-        })
+        }).then(() => {
+            document.getElementById('#session-' + session_id).classList.add('selected')
+        });
     }
 }
 

@@ -43,7 +43,7 @@ function loadFromLocalStorage() {
 
             if (key === 'ttsSpeed' || key === 'ttsVolume') {
                 settings[key] = parseFloat(value);
-            } else if (key === 'ttsAutoRead') {
+            } else if (key === 'ttsAutoRead' || key === 'developerMode') {
                 settings[key] = value === 'true';
             } else {
                 settings[key] = value;
@@ -100,6 +100,7 @@ function saveSettings() {
 
     const oldProfile = get_setting('hermesProfile');
     const oldEndPoint = get_setting('llmEndpoint');
+    const oldDeveloperMode = get_setting('developerMode');
 
     for (const key in STORAGE_KEYS) {
         const elemId = camelToKebab(key);
@@ -125,6 +126,12 @@ function saveSettings() {
         return;
     }
 
+    //Apply developer mode
+    const newDeveloperMode = get_setting('developerMode');
+    if (oldDeveloperMode != newDeveloperMode) {
+        applyDeveloperMode(document.getElementById('chat-container'));
+    }
+
     //Apply audio settings to existing audios
     document.querySelectorAll('audio').forEach((audio) => {
         audio.volume = get_setting('ttsVolume') / 100;
@@ -133,6 +140,22 @@ function saveSettings() {
 
     //Show chat panel to close parameters
     showPanel('chat');
+}
+
+function applyDeveloperMode(container) {
+    const developerMode = get_setting('developerMode');
+    container.querySelectorAll('.tool-info').forEach((elem) => {
+        if (developerMode)
+            elem.classList.remove('hidden');
+        else
+            elem.classList.add('hidden');
+    });
+    container.querySelectorAll('.tool-human-readable').forEach((elem) => {
+        if (developerMode)
+            elem.classList.add('hidden');
+        else
+            elem.classList.remove('hidden');
+    })
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

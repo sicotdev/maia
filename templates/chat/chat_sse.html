@@ -20,7 +20,7 @@
 
     <div class="reasoning-container" sse-swap="reasoning" hx-on::after-swap="parseMd(this.querySelector('.details-body'))"></div>
 
-    <div class="tools-container" sse-swap="tool_call" hx-swap="beforeend"></div>
+    <div class="tools-container" sse-swap="tool_call" hx-swap="beforeend" hx-on::after-swap="onToolUsed(this)"></div>
 
     {# Hidden div with the raw text before marked parsing and DOMPurify sanitization #}
     <div class="answer-raw"

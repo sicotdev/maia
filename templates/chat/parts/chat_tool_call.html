@@ -1,4 +1,5 @@
-<details class="details-body">
+<div class="tool-human-readable">{{ call.human_readable }}</div>
+<details class="details-body tool-info">
     <summary><span class="fn-name">{{ call.name }}</span>(<span class="fn-args">{{ call.arguments }}</span>)</summary>
     <div class="details-body">
         {% include "chat/parts/chat_tool_call_output.html" %}

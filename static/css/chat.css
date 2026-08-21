@@ -82,12 +82,14 @@
 
 
 /* ---- collapsible details ---- */
+.tool-human-readable { margin-left: 10px; }
+.tool-human-readable.hidden, .tool-info.hidden { display:none; }
 details {
     border: 1px dashed var(--border);
     border-radius: var(--radius);
     padding: 0 10px;
 }
-details > summary {
+details > summary, .tool-human-readable {
     cursor: pointer;
     font-family: var(--mono);
     font-size: 11px;
