@@ -3,9 +3,5 @@
 <button id="btn-new-session" hx-on:click="sessionNewBtnClick()">Nouvelle session</button>
 
 <ul id="conversation-list" hx-get="/sessions" hx-trigger="profileChange" hx-include="#filter-text, #filter-date">
-    <div hx-get="/sessions"
-    hx-trigger="intersect once"
-    hx-swap="outerHTML">
-        <span class="spinner"></span>
-    </div>
+    <span class="spinner"></span>
 </ul>

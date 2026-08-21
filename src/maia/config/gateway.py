@@ -1,6 +1,8 @@
 import os
+
 from fastapi import Cookie
-from maia.config.settings import PROFILES, LLM_ENDPOINTS
+
+from maia.config.settings import LLM_ENDPOINTS, PROFILES
 
 GATEWAY_URL = os.getenv("HERMES_GATEWAY_URL")
 GATEWAY_APIKEY = os.getenv("HERMES_GATEWAY_APIKEY")

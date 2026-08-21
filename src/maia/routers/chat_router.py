@@ -1,15 +1,17 @@
-import httpx2
 import json
+import random
 import time
 import uuid
-import random
+from html import escape
 from itertools import islice
 from typing import Any
-from html import escape
 from urllib.parse import urlencode
-from fastapi import APIRouter, Form, Query, Path, Request, Depends
-from fastapi.responses import StreamingResponse, JSONResponse
-from maia.config.gateway import get_gateway_params, get_custom_gateway
+
+import httpx2
+from fastapi import APIRouter, Depends, Form, Path, Query, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+
+from maia.config.gateway import get_custom_gateway, get_gateway_params
 from maia.config.logging_config import logger
 from maia.config.templating import templates
 

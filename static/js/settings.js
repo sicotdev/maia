@@ -27,6 +27,9 @@ function get_setting(key) {
 function set_settings_cookie() {
     document.cookie = `llmEndpoint=${get_setting('llmEndpoint')}; path=/; SameSite=Lax;`;
     document.cookie = `hermesProfile=${get_setting('hermesProfile')}; path=/; SameSite=Lax;`;
+
+    //Load sessions from the new profile
+    htmx.trigger('#conversation-list', 'profileChange');
 }
 
 function loadFromLocalStorage() {
@@ -108,17 +111,14 @@ function saveSettings() {
     const newEndPoint = get_setting('llmEndpoint');
     if (oldProfile != newProfile || oldEndPoint != newEndPoint) {
 
-        //Save new cookie
-        set_settings_cookie();
-
         //Clear sessions immediatly
         document.getElementById('conversation-list').innerHTML = '<span class="spinner"></span>';
 
         //Clic new session to clear chat (call showPanel('chat') internally)
         sessionNewBtnClick();
 
-        //Load sessions from the new profile
-        htmx.trigger('#conversation-list', 'profileChange');
+        //Save new cookie & reload sessions
+        set_settings_cookie();
         return;
     }
 
@@ -148,6 +148,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 4. Apply them
         applySettings();
+
+        //Save cookie & load sessions
+        set_settings_cookie();
 
         //Bind events
         document.getElementById('tts-speed').addEventListener("input", () => {event.target.nextElementSibling.textContent = event.target.value + 'x'})
