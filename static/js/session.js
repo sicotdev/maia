@@ -1,3 +1,11 @@
+function sessionSelectionToggle() {
+    document.getElementById('conversation-list').classList.toggle('is-selection-mode');
+
+    const button = document.getElementById('btn-delete-selected');
+    console.log('disabled='+button.disabled);
+    button.disabled = !button.disabled;
+}
+
 function onSessionLoaded(container) {
     // Format timestamps in the session tooltip
     formatTimestamps(container);
