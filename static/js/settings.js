@@ -5,7 +5,8 @@ const STORAGE_KEYS = {
     ttsVolume: 'maia_tts_volume',
     ttsAutoRead: 'maia_tts_auto_read',
     llmEndpoint: 'maia_llm_endpoint',
-    hermesProfile: 'maia_hermes_profile'
+    hermesProfile: 'maia_hermes_profile',
+    developerMode: 'maia_developer_mode'
 };
 const DEFAULT_VALUES = {
     ttsEngine: 0,
@@ -14,8 +15,10 @@ const DEFAULT_VALUES = {
     ttsVolume: 100,
     ttsAutoRead: false,
     llmEndpoint: 0,
-    hermesProfile: 0
+    hermesProfile: 0,
+    developerMode: false
 };
+
 const settings = {};
 
 let settings_config = {};
@@ -158,10 +161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Erreur d\'initialisation des paramètres:', error);
     }
-
-    const selectLLM = document.getElementById('llm-endpoint');
-    selectLLM.addEventListener('change', () => onLLMSelectChange(selectLLM));
-    onLLMSelectChange(selectLLM);
 });
 
 function onLLMSelectChange(selectLLM) {
