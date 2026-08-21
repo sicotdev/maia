@@ -1,11 +1,9 @@
-<div class="message role-{{ msg.role }}" 
-    {% if msg.context_tokens %}
-        data-context-tokens="{{ msg.context_tokens}}"
-    {% endif %}
-    >
+<div class="message role-{{ msg.role }}">
 
     <div class="message-header">
         {% if msg.timestamp %}<span class="timestamp">{{ msg.timestamp }}</span>{% endif %}
+        {% if msg.elapsed_time %}<span class='elapsed-time'>{{ msg.elapsed_time }} s</span>{% endif %}
+        {% if msg.usage %}<span class='token-count'>Tokens: {{ usage.input_tokens }} in, {{ usage.output_tokens }} out</span>{% endif %}
     </div>
 
     {# ---- reasoning / chain-of-thought (collapsed by default) ---- #}

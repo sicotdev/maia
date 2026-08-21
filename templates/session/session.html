@@ -20,11 +20,10 @@
         <div class="tooltip-header">
             
             <div class="tooltip-actions">
+                {# we use htmx.ajax here to add the source document.body, so it works even if tooltip is removed #}
                 <button class="btn btn-generate-title" 
-                    hx-vals='{"auto": true}'
-                    hx-patch="/sessions/{{ session.id }}/title"
                     title="Générer un titre automatiquement"
-                    hx-swap="none">
+                    onclick="htmx.ajax('PATCH', '/sessions/{{ session.id }}/title', {source: document.body, values: {auto: true}, swap: 'none'})">
                     <i class="ti ti-wand"></i>
                 </button>
                 <button class="btn btn-edit-title"

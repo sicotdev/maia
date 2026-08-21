@@ -397,12 +397,7 @@ async def chat_stream(
                                 "message-header",
                                 f"""<span class='timestamp'>{timestamp}</span>
                                 <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
-                                <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
-                            )
-
-                            yield _sse(
-                                "context_tokens",
-                                f"<input type='hidden' id='context_tokens' value='{usage['input_tokens']}'>",
+                                <span class='token-count'>Tokens: {usage["input_tokens"]} in, {usage["output_tokens"]} out</span>""",
                             )
 
                             # TODO: no tool outputs or reasoning until run.completed
@@ -603,14 +598,7 @@ async def chat_run(
                                 "message-header",
                                 f"""<span class='timestamp'>{timestamp}</span>
                                 <span class='elapsed-time'>{int(timestamp - startTime)} s</span>
-                                <span class='token-count'>{usage["output_tokens"]} tokens</span>""",
-                            )
-
-                            print(f"context : {usage['input_tokens']}")
-
-                            yield _sse(
-                                "context_tokens",
-                                f"<input type='hidden' id='context_tokens' value='{usage['input_tokens']}'>",
+                                <span class='token-count'>Tokens: {usage["input_tokens"]} in, {usage["output_tokens"]} out</span>""",
                             )
 
                             # No delta means it's an error message
@@ -731,6 +719,7 @@ async def get_response(
         payload["reasoning"] = {"effort": "none"}
 
     async with httpx2.AsyncClient(timeout=None) as client:
+        startTime = time.time()
         error_message = (
             "Une erreur est survenue, veuillez nous excuser pour la gêne occasionnée."
         )
@@ -799,7 +788,8 @@ async def get_response(
                             "reasoning": reasoning,
                             "tool_steps": tool_steps,
                             "content": ai_response,
-                            "context_tokens": result.get("usage").get("input_tokens"),
+                            "usage": result.get("usage"),
+                            "elapsed_time": int(result.get("completed_at") - startTime),
                         },
                     ],
                 },
@@ -811,15 +801,6 @@ async def get_response(
                 f"Gateway HTTP Error: {e.response.status_code} - {e.response.text}",
                 exc_info=True,
             )
-            return JSONResponse(
-                {
-                    "role": "assistant",
-                    "content": error_message,
-                    "error": True,
-                }
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error in chat router: {str(e)}", exc_info=True)
             return JSONResponse(
                 {
                     "role": "assistant",

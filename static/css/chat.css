@@ -156,14 +156,6 @@ details .details-body {
     position: relative;
 }
 
-.context-tokens {
-    font-size: 11px;
-    color: #8a8a8a;
-    position: absolute;
-    top: 0;
-    left: 35px;
-}
-
 #user-input {
     flex: 1;
     padding: 12px;
