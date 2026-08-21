@@ -43,6 +43,8 @@ function userInputAfterRequest(event) {
 
         //Re-enable buttons and textarea
         document.querySelectorAll('#chat-form button, #chat-form textarea').forEach(elem => elem.disabled = false);
+
+        updateSessionAfterMessage();
     }
 }
 
@@ -120,6 +122,8 @@ function onChatStreamEnd(message, tmp_id) {
         endAudioGeneration(audioContainer.querySelector('button'), tmp_id, messageId);
     
     audioContainer.classList.add("visible");
+
+    updateSessionAfterMessage()
 }
 
 
@@ -150,6 +154,18 @@ function clearChat() {
     document.getElementById('chat-container').innerHTML = '';
     document.getElementById('session_id').value = '';
     document.getElementById('previous_response_id').value = '';
+}
+
+//Update session infos
+function updateSessionAfterMessage() {
+    const session_id = document.getElementById('session_id').value;
+    if (session_id) {
+        htmx.ajax('GET', '/sessions/' + session_id, {
+            values: { last_active: Date.now() / 1000 },
+            target: '#session-' + session_id,
+            swap: 'outerHTML'
+        })
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

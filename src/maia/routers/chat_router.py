@@ -447,6 +447,7 @@ async def chat_stream(
                         f"<input type='hidden' id='real_message_id' value='{message_id}'>",
                     )
 
+                    # yield response_id to chain previous_response_id
                     if response_id:
                         yield _sse(
                             "response_id",

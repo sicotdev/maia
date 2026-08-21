@@ -91,6 +91,35 @@ async def load_sessions(
             )
 
 
+@router.get("/{session_id}")
+async def get_session(
+    request: Request,
+    gateway_params: str = Depends(get_gateway_params),
+    session_id: str = Path(...),
+    last_active: str = Query(...),
+):
+    async with httpx2.AsyncClient(timeout=None) as client:
+        response = await client.get(
+            f"{gateway_params['url']}/api/sessions/{session_id}",
+            headers=gateway_params["headers"],
+        )
+        response.raise_for_status()
+        result = response.json()
+        session = result.get("session")
+
+        print(session)
+
+        # TODO: missing preview and last_active in response
+        session["preview"] = session["title"]
+        session["last_active"] = last_active
+
+        return templates.TemplateResponse(
+            request=request,
+            name="session/session.html",
+            context={"session": session},
+        )
+
+
 @router.patch("/{session_id}/title")
 async def update_session_title(
     request: Request,
