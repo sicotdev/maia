@@ -93,14 +93,16 @@ function onChatStreamEnd(message, tmp_id) {
     
     //Regroup tool calls
     const toolContainer = message.querySelector('.tools-container');
-    const toolElems = [...toolContainer.childNodes]; //Convert to array to avoid a dynamic child list
+    const toolElems = [...toolContainer.childNodes]; //Convert to array to avoid a dynamic child list since we move them
     if (toolElems.length > 0) {
+
+        const toolCount = toolContainer.querySelectorAll('.tool-info').length;
 
         const stepContainer = document.createElement("details");
         stepContainer.className = "tool-steps";
         
         const summary = document.createElement("summary");
-        summary.textContent = `Outils utilisés (${toolElems.length})`;
+        summary.textContent = `Outils utilisés (${toolCount})`;
         
         stepContainer.appendChild(summary);
         toolElems.forEach((toolElem) => stepContainer.appendChild(toolElem));
